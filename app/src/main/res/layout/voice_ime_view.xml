@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nl.politie.predev.android.stempolvoiceime.VoiceInputView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:background="#ffffff"
+    android:backgroundTint="#e0e0e0"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:keepScreenOn="true"
+    android:orientation="vertical">
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:id="@+id/bImeKeyboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/button_go"
+            android:backgroundTint="#ffffff"
+            android:contentDescription="Change input method"
+            android:padding="@dimen/layoutMargin1"
+            android:src="@drawable/ic_notification_ime_default"
+            android:tint="@color/grey900" />
+
+        <TextView
+            android:id="@+id/tvMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@id/bImeKeyboard"
+
+            android:layout_alignBottom="@id/bImeKeyboard"
+            android:layout_centerInParent="true"
+            android:layout_toStartOf="@id/bImeSettings"
+            android:layout_toLeftOf="@id/bImeSettings"
+            android:layout_toEndOf="@id/bImeKeyboard"
+            android:layout_toRightOf="@id/bImeKeyboard"
+            android:backgroundTint="#ffffff"
+            android:ellipsize="start"
+            android:gravity="center"
+            android:lines="2"
+            android:singleLine="false"
+            android:textColor="@color/grey900"
+            android:textSize="@dimen/textSize2"
+            android:visibility="visible"
+            tools:text="Summary enable IME" />
+
+        <ImageButton
+            android:id="@+id/bImeSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/button_go"
+            android:backgroundTint="#ffffff"
+            android:contentDescription="Go"
+            android:padding="@dimen/layoutMargin1"
+            android:src="@android:drawable/ic_menu_preferences"
+            android:tint="@color/grey900" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/centralButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#004682"
+        android:backgroundTint="#004682"
+        android:paddingLeft="@dimen/layoutMargin4dp"
+        android:visibility="visible">
+
+        <nl.politie.predev.android.stempolvoiceime.MicButton
+            android:id="@+id/bImeStartStop"
+            android:layout_width="@dimen/layoutHeightButtonMicrophone"
+            android:layout_height="@dimen/layoutHeightButtonMicrophone"
+            android:layout_alignParentLeft="true"
+            android:layout_centerInParent="true"
+            android:layout_gravity="left"
+            android:background="@drawable/button_mic"
+            android:contentDescription="mic"
+            android:foregroundGravity="left"
+            android:gravity="left"
+            android:paddingTop="@dimen/layoutMargin4dp" />
+
+        <LinearLayout
+            android:id="@+id/rlKeyButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="@dimen/layoutMargin1"
+            android:layout_marginLeft="@dimen/layoutMargin1"
+            android:layout_toEndOf="@+id/bImeStartStop"
+            android:layout_toRightOf="@+id/bImeStartStop"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="false"
+                android:layout_toRightOf="@id/bImeStartStop"
+                android:ellipsize="start"
+                android:singleLine="true"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="visible"
+                tools:text="Status van de spraakherkenner" />
+            <!-- android:layout_centerInParent="false"
+                            android:layout_toRightOf="@id/bImeStartStop" -->
+            <TextView
+                android:id="@+id/tvSpeech"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+
+
+                android:width="100sp"
+                android:clickable="false"
+                android:ellipsize="start"
+                android:gravity="left"
+                android:lines="2"
+                android:singleLine="false"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:visibility="visible"
+                tools:text="Dit is de tekst die hij heeft herkend en waarschijnlijk gaat plotten" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/footerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#004682"
+        android:backgroundTint="#004682">
+
+        <TextView
+            android:id="@+id/tvInstruction"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/layoutMargin4dp"
+            android:gravity="center"
+            android:textColor="@color/grey900"
+            android:textSize="@dimen/textSize3"
+            tools:text="IME Speak" />
+
+        <Button
+            android:id="@+id/tvComboSelector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/layoutMargin1"
+            android:background="@drawable/button_combo"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:minWidth="@dimen/layoutMargin3"
+            android:minHeight="@dimen/layoutMargin3"
+            android:singleLine="true"
+            android:textColor="@color/grey900"
+            android:textSize="@dimen/textSize10sp"
+            tools:text="Test combo label" />
+    </RelativeLayout>
+</nl.politie.predev.android.stempolvoiceime.VoiceInputView>

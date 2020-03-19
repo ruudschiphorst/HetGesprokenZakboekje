@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#D81B60</color>
+
+    <color name="orange">#ff6600</color>
+    <!-- orange -->
+    <color name="orange1">#ffcc99</color>
+    <!-- sand(Safe Hex3) -->
+    <color name="green1">#99cc33</color>
+    <color name="green3">#669900</color>
+    <color name="red">#cc0000</color>
+    <color name="logoblue">#00427f</color>
+    <color name="buttonStroke">#808080</color>
+    <color name="buttonNormalStart">#cc0000</color>
+    <color name="buttonNormalEnd">#660000</color>
+    <color name="buttonPressed">#660000</color>
+    <color name="grey1">#c0c0c0</color>
+    <color name="grey2">#808080</color>
+
+    <!-- http://www.google.com/design/spec/style/color.html#color-color-palette -->
+    <color name="grey50">#fafafa</color>
+    <color name="grey100">#f5f5f5</color>
+    <color name="grey200">#eeeeee</color>
+    <color name="grey300">#e0e0e0</color>
+    <color name="grey400">#bdbdbd</color>
+    <color name="grey700">#616161</color>
+    <color name="grey800">#424242</color>
+    <color name="grey900">#212121</color>
+    <!-- Text shadow -->
+    <color name="shadow">#0f0f0f</color>
+
+    <!-- 1 = top,lighter; 2 = bottom,darker -->
+    <color name="very_transparent">#11404040</color>
+    <color name="transparent_blue">#990099cc</color>
+    <color name="buttonNormal1">#ffcc00</color>
+    <color name="buttonNormal2">#996600</color>
+    <color name="buttonPressed1">#996600</color>
+    <color name="buttonPressed2">#ffcc00</color>
+    <color name="buttonFocused1">#ffcc00</color>
+    <color name="buttonFocused2">#ffcc00</color>
+    <color name="buttonRecordingNormal1">#ff4444</color>
+    <color name="buttonRecordingNormal2">#cc0000</color>
+    <color name="buttonTranscribingNormal1">#c58be2</color>
+    <color name="buttonTranscribingNormal2">#9933cc</color>
+    <color name="buttonWaiting">#424242</color>
+
+    <color name="dialog_cancel_bgcolor">#dd3300</color>
+    <color name="dialog_ok_bgcolor">#0099dd</color>
+
+
+</resources>

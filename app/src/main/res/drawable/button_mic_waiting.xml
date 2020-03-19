@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <vector xmlns:android="http://schemas.android.com/apk/res/android"
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportHeight="512.0"
+            android:viewportWidth="512.0">
+            <!-- android:tint="?attr/colorControlNormal"> -->
+            <group android:name="recbutton">
+                <path
+                    android:name="outerRing"
+                    android:fillColor="#800064"
+                    android:pathData="M256,512C114.595,512,0,397.405,0,256S114.595,0,256,0s256,114.595,256,256C511.86,397.312,397.312,511.86,256,512z" />
+                <path
+                    android:name="innerRing"
+                    android:fillColor="#A00084"
+                    android:pathData="M256,46.545C140.335,46.545,46.545,140.335,46.545,256S140.335,465.455,256,465.455S465.455,371.665,465.455,256
+	C465.315,140.381,371.619,46.685,256,46.545z" />
+            </group>
+        </vector>
+    </item>
+
+</selector>

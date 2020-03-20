@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
                 MediaType.parse("application/json"), json);
 
         Request request = new Request.Builder()
-                .url(BASE_HTTPS_URL_DB_API + "api/auth/generatetoken")
+                .url("https://40.114.240.242:8085/api/auth/generatetoken")
                 .post(body)
                 .build();
 

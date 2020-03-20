@@ -10,8 +10,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
 import java.security.cert.CertificateException;
@@ -50,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private ScheduledExecutorService tokenRefresher;
     public static final String EXTRA_MESSAGE = "ZAKBOEKJE_NOTE";
     public static final int NOTE_ACTIVITY_RESULT = 1;
-	private Date tokenAquiredAt = null;
+    private static final String BASE_HTTPS_URL_DB_API ="https://40.114.240.242:8086/";
+
 
     public interface RecyclerViewClickListener {
         public void onItemClicked(UUID uuid);
@@ -60,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
+        setContentView(R.layout.activity_main);
 
         recyclerView = (RecyclerView) findViewById(R.id.activity__main_recycler);
         recyclerView.setHasFixedSize(true);
@@ -73,12 +77,19 @@ public class MainActivity extends AppCompatActivity {
         adapter = new MainRecyclerViewAdapter(new ArrayList<Note>(), getRecyclerViewClickListener());
         recyclerView.setAdapter(adapter);
 
+		FloatingActionButton fabAdd = findViewById(R.id.activity_main_add);
+		fabAdd.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				openNoteActivity(null);
+			}
+		});
 
-
-    }
+	}
 
     private RecyclerViewClickListener getRecyclerViewClickListener() {
-        RecyclerViewClickListener retval = new RecyclerViewClickListener() {
+
+    	RecyclerViewClickListener retval = new RecyclerViewClickListener() {
             @Override
             public void onItemClicked(UUID uuid) {
                 openNote(uuid);
@@ -99,6 +110,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void openNote(UUID noteUUID) {
 
+    	if(atr == null) {
+
+			Toast.makeText(getBaseContext(), "Nog geen accesstoken. Moment geduld...", Toast.LENGTH_SHORT);
+			return;
+
+		}
+
         while(atr == null) {
             Log.e("bla", "geen token");
         }
@@ -111,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                 MediaType.parse("application/json"), json);
 
         Request request = new Request.Builder()
-                .url("https://40.114.240.242:8086/getnote")
+                .url(BASE_HTTPS_URL_DB_API + "getnote")
                 .post(body)
                 .addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
                 .build();
@@ -124,12 +142,9 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-
-
                 String resp = response.body().string();
                 Log.e("bla",resp);
                 openNoteActivity(resp);
-
             }
         });
 
@@ -164,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
         OkHttpClient client =  getUnsafeOkHttpClient();
 
         Request request = new Request.Builder()
-                .url("https://40.114.240.242:8086/getall")
+                .url(BASE_HTTPS_URL_DB_API + "getall")
                 .get()
                 .addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
                 .build();
@@ -177,8 +192,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-
-
                 String resp = response.body().string();
                 ObjectMapper om = new ObjectMapper();
                 data = Arrays.asList(om.readValue(resp, Note[].class));
@@ -204,9 +217,8 @@ public class MainActivity extends AppCompatActivity {
 
         RequestBody body = RequestBody.create(
                 MediaType.parse("application/json"), note);
-
         Request request = new Request.Builder()
-                .url("https://40.114.240.242:8086/addnote")
+                .url(BASE_HTTPS_URL_DB_API + "addnote")
                 .post(body)
                 .addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
                 .build();
@@ -221,7 +233,6 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call call, Response response) throws IOException {
 
                 Handler mainHandler = new Handler(getBaseContext().getMainLooper());
-
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
@@ -305,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
                 MediaType.parse("application/json"), json);
 
         Request request = new Request.Builder()
-                .url("https://40.114.240.242:8085/api/auth/generatetoken")
+                .url(BASE_HTTPS_URL_DB_API + "api/auth/generatetoken")
                 .post(body)
                 .build();
 

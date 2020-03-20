@@ -7,22 +7,23 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/note_tv_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:enabled="true"
-        android:paddingLeft="10dp"
-        android:paddingTop="10dp"
-        android:paddingRight="10dp"
-        android:paddingBottom="10dp"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/note_btn_save"
-        app:layout_constraintStart_toStartOf="parent"/>
+	<EditText
+		android:id="@+id/note_tv_title"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="16dp"
+		android:enabled="true"
+		android:maxLength="40"
+		android:paddingLeft="10dp"
+		android:paddingTop="10dp"
+		android:paddingRight="10dp"
+		android:paddingBottom="10dp"
+		android:textSize="24sp"
+		android:textStyle="bold"
+		app:layout_constraintEnd_toStartOf="@id/note_btn_save"
+		app:layout_constraintHorizontal_weight="1"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/note_tv_text"

@@ -16,5 +16,14 @@
         android:visibility="visible"
         tools:visibility="visible" />
 
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/activity_main_add"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:backgroundTint="@color/very_transparent"
+		android:src="@android:drawable/ic_input_add"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

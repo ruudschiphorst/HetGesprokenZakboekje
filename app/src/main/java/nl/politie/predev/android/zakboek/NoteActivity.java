@@ -16,17 +16,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.Date;
 
 public class NoteActivity extends AppCompatActivity {
 
-    public static final String NOTE_RESULT = "note_result";
-	private boolean voiceInputActive =false;
-    private Note n = null;
-    TextView title = null;
-    TextView textView = null;
-
-    private InsecureStempolRpcSpeechService speechService;
-    private VoiceRecorder voiceRecorder;
+	public static final String NOTE_RESULT = "note_result";
+	private boolean voiceInputActive = false;
+	private Note n = null;
+	private TextView title = null;
+	private TextView textView = null;
+	private InsecureStempolRpcSpeechService speechService;
+	private VoiceRecorder voiceRecorder;
 
 	private final VoiceRecorder.Callback voiceCallback = new VoiceRecorder.Callback() {
 
@@ -90,19 +90,19 @@ public class NoteActivity extends AppCompatActivity {
 
 				@Override
 				public void onSpeechRecognized(String text, boolean isFinal, boolean fromUpload) {
-					if(isFinal) {
+					if (isFinal) {
 
 						//Unk kan overal in de tekst voorkomen. Haal dit er uit.
-						text = text.replace("<unk>","").trim();
+						text = text.replace("<unk>", "").trim();
 
 						//Er worden automatisch spaties en punten geplot. Dit klopt niet altijd, zeker als er <unk>s in het resultaat zitten.
 						//Sloop de "verkeerde" spaties er uit
-						while(text.contains(" .")) {
-							text=text.replace(" .",".");
+						while (text.contains(" .")) {
+							text = text.replace(" .", ".");
 						}
 						//Zorg er wel voor dat we niet de hele string kwijt zijn. Dan hoeft ie niets te doen.
 						//Het kan voorkomen dat na trimmen en alle <unk>'s er uit halen, er alleen een punt overblijft. Dat willen we ook niet, dus <= 1
-						if(text.length() <= 1) {
+						if (text.length() <= 1) {
 							return;
 						}
 
@@ -122,7 +122,6 @@ public class NoteActivity extends AppCompatActivity {
 				}
 			};
 
-
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -130,56 +129,58 @@ public class NoteActivity extends AppCompatActivity {
 	}
 
 	@Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_note);
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_note);
 
-        title = findViewById(R.id.note_tv_title);
-        textView = findViewById(R.id.note_tv_text);
+		title = findViewById(R.id.note_tv_title);
+		textView = findViewById(R.id.note_tv_text);
 
+		if(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) !=null) {
+			ObjectMapper om = new ObjectMapper();
+			try {
+				n = om.readValue(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE), Note.class);
+			} catch (IOException e) {
+				Log.e("Err", "Error", e);
+				finish();
+			}
 
-        ObjectMapper om = new ObjectMapper();
+			title.setText(n.getTitle());
+			textView.setText(n.getNote_text());
+		}else{
+			n = new Note();
+			title.setText("Nieuwe notitie");
+		}
+		ImageButton ib = findViewById(R.id.note_btn_save);
+		ib.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				updateAndReturnNote();
+			}
+		});
 
-        try {
-            n = om.readValue(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) , Note.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+		final ImageButton ibMic = findViewById(R.id.note_btn_mic);
 
-        title.setText(n.getTitle());
-        textView.setText(n.getNote_text());
-
-        ImageButton ib = findViewById(R.id.note_btn_save);
-        ib.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                updateAndReturnNote();
-            }
-        });
-
-        final ImageButton ibmic = findViewById(R.id.note_btn_mic);
-
-        ibmic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view){
-            	voiceInputActive =! voiceInputActive;
-            	if(voiceInputActive) {
-            		ibmic.setImageDrawable(getDrawable(android.R.drawable.presence_audio_busy));
-            		startVoiceRecorder();
-				}else{
-            		ibmic.setImageDrawable(getDrawable(android.R.drawable.presence_audio_online));
-            		stopVoiceRecorder();
+		ibMic.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				voiceInputActive = !voiceInputActive;
+				if (voiceInputActive) {
+					ibMic.setImageDrawable(getDrawable(android.R.drawable.presence_audio_busy));
+					startVoiceRecorder();
+				} else {
+					ibMic.setImageDrawable(getDrawable(android.R.drawable.presence_audio_online));
+					stopVoiceRecorder();
 				}
-            }
-        });
+			}
+		});
 
-    }
+	}
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-    }
+	@Override
+	protected void onResume() {
+		super.onResume();
+	}
 
 	@Override
 	protected void onStop() {
@@ -189,31 +190,31 @@ public class NoteActivity extends AppCompatActivity {
 	}
 
 	@Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
+	protected void onDestroy() {
+		super.onDestroy();
+	}
 
-    private void updateAndReturnNote() {
+	private void updateAndReturnNote() {
 
 		//TODO constant
-        n.setTitle(nn(title.getText().toString(),"<Geen titel>"));
-        n.setNote_text(textView.getText().toString());
+		n.setTitle(nn(title.getText().toString(), "<Geen titel>"));
+		n.setNote_text(textView.getText().toString());
 		n.setGenerated_at(null);
 		n.setId(null);
-        ObjectMapper om = new ObjectMapper();
-        String note = null;
+		ObjectMapper om = new ObjectMapper();
+		String note = null;
 
-        try {
-            note = om.writeValueAsString(n);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+		try {
+			note = om.writeValueAsString(n);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-        Intent returnIntent = new Intent();
-        returnIntent.putExtra(NOTE_RESULT, note);
-        setResult(Activity.RESULT_OK, returnIntent);
-        finish();
-    }
+		Intent returnIntent = new Intent();
+		returnIntent.putExtra(NOTE_RESULT, note);
+		setResult(Activity.RESULT_OK, returnIntent);
+		finish();
+	}
 
 	private void startVoiceRecorder() {
 		if (voiceRecorder != null) {
@@ -230,14 +231,14 @@ public class NoteActivity extends AppCompatActivity {
 		}
 	}
 
-    private String nn(Object value, String valueIfNull) {
+	private String nn(Object value, String valueIfNull) {
 
-        if(value != null) {
-            return value.toString();
-        }else{
-            return valueIfNull;
-        }
+		if (value != null) {
+			return value.toString();
+		} else {
+			return valueIfNull;
+		}
 
-    }
+	}
 
 }

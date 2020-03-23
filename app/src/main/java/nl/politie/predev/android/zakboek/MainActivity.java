@@ -171,11 +171,39 @@ public class MainActivity extends AppCompatActivity {
 
 	private void getNotesFromServer() {
 
+		//Tijdens opstarten is er nog geen token (of gebruiker heeft nog geen credentials ingevoerd)
+		//Alles is asynchroon, dus het kan zijn dat we gewoon even moeten wachten tot de app een token heeft opgehaald
+		//En de server een reactie heeft gestuurd. Probeer het 5 seconden lang.
+		//Is er geen username en password, dan komt er automatisch een prompt
+		int tries = 0;
+
+		while(true){
+
+			if(atr == null) {
+				if(tries > 5) {
+					//Meer dan 5 seconden gewacht -> geen nut. Stop maar met proberen en wacht tot onResume() opnieuw wordt aangeroepen,
+					//bijvoorbeeld omdat gebruiker het password scherm heeft bijgewerkt.
+					return;
+				}else{
+					tries++;
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}else{
+				//Er is inmiddels een token, ga maar uit de lus
+				break;
+			}
+		}
+
 		if (atr == null) {
 			try {
 				//Gebeurt asynchroon, dus even geduld om te proberen of het lukt
 				Thread.sleep(2500);
 			} catch (InterruptedException e) {
+				//TODO
 				e.printStackTrace();
 			}
 			if(atr == null) {
@@ -220,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void saveNote(String note) {
 
+		
 		OkHttpClient client = getUnsafeOkHttpClient();
 
 		RequestBody body = RequestBody.create(
@@ -252,6 +281,7 @@ public class MainActivity extends AppCompatActivity {
 
 	}
 
+	//TODO
 	private static OkHttpClient getUnsafeOkHttpClient() {
 		try {
 			// Create a trust manager that does not validate certificate chains
@@ -300,8 +330,8 @@ public class MainActivity extends AppCompatActivity {
 		String username = settings.getString(CredentialsActivity.PREFS_USERNAME, "").toString();
 		String password = settings.getString(CredentialsActivity.PREFS_PASS, "").toString();
 
+		//Geen username + pass = prompt gebruiker
 		if (username.equalsIgnoreCase("") || password.equalsIgnoreCase("")) {
-			Log.e("bla", "niets");
 			Intent intent = new Intent(getApplicationContext(), CredentialsActivity.class);
 			startActivity(intent);
 		} else {
@@ -357,6 +387,8 @@ public class MainActivity extends AppCompatActivity {
 					String resp = response.body().string();
 					ObjectMapper om = new ObjectMapper();
 					atr = om.readValue(resp, AccesTokenRequest.class);
+				}else{
+					//TODO
 				}
 			}
 		});

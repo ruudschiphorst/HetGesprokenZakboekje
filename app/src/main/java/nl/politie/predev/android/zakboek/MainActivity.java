@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -45,37 +46,37 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private RecyclerView recyclerView;
-    private MainRecyclerViewAdapter adapter;
-    private RecyclerView.LayoutManager layoutManager;
-    private AccesTokenRequest atr;
-    List<Note> data = new ArrayList<Note>();
-    private ScheduledExecutorService tokenRefresher;
-    public static final String EXTRA_MESSAGE = "ZAKBOEKJE_NOTE";
-    public static final int NOTE_ACTIVITY_RESULT = 1;
-    private static final String BASE_HTTPS_URL_DB_API ="https://40.114.240.242:8086/";
+	private RecyclerView recyclerView;
+	private MainRecyclerViewAdapter adapter;
+	private RecyclerView.LayoutManager layoutManager;
+	private AccesTokenRequest atr;
+	List<Note> data = new ArrayList<Note>();
+	private ScheduledExecutorService tokenRefresher;
+	public static final String EXTRA_MESSAGE = "ZAKBOEKJE_NOTE";
+	public static final int NOTE_ACTIVITY_RESULT = 1;
+	private static final String BASE_HTTPS_URL_DB_API = "https://40.114.240.242:8086/";
 
 
-    public interface RecyclerViewClickListener {
-        public void onItemClicked(UUID uuid);
-    }
+	public interface RecyclerViewClickListener {
+		public void onItemClicked(UUID uuid);
+	}
 
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_main);
+		setContentView(R.layout.activity_main);
 
-        recyclerView = (RecyclerView) findViewById(R.id.activity__main_recycler);
-        recyclerView.setHasFixedSize(true);
+		recyclerView = (RecyclerView) findViewById(R.id.activity__main_recycler);
+		recyclerView.setHasFixedSize(true);
 
-        layoutManager = new LinearLayoutManager(this);
-        ((LinearLayoutManager) layoutManager).setOrientation(RecyclerView.VERTICAL);
-        recyclerView.setLayoutManager(layoutManager);
+		layoutManager = new LinearLayoutManager(this);
+		((LinearLayoutManager) layoutManager).setOrientation(RecyclerView.VERTICAL);
+		recyclerView.setLayoutManager(layoutManager);
 
-        adapter = new MainRecyclerViewAdapter(new ArrayList<Note>(), getRecyclerViewClickListener());
-        recyclerView.setAdapter(adapter);
+		adapter = new MainRecyclerViewAdapter(new ArrayList<Note>(), getRecyclerViewClickListener());
+		recyclerView.setAdapter(adapter);
 
 		FloatingActionButton fabAdd = findViewById(R.id.activity_main_add);
 		fabAdd.setOnClickListener(new View.OnClickListener() {
@@ -87,253 +88,277 @@ public class MainActivity extends AppCompatActivity {
 
 	}
 
-    private RecyclerViewClickListener getRecyclerViewClickListener() {
+	private RecyclerViewClickListener getRecyclerViewClickListener() {
 
-    	RecyclerViewClickListener retval = new RecyclerViewClickListener() {
-            @Override
-            public void onItemClicked(UUID uuid) {
-                openNote(uuid);
-            }
-        };
-        return retval;
-    }
+		RecyclerViewClickListener retval = new RecyclerViewClickListener() {
+			@Override
+			public void onItemClicked(UUID uuid) {
+				openNote(uuid);
+			}
+		};
+		return retval;
+	}
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if(tokenRefresher == null || tokenRefresher.isShutdown()) {
-        	tokenRefresher = getTokenRefresher();
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		if (tokenRefresher == null || tokenRefresher.isShutdown()) {
+			tokenRefresher = getTokenRefresher();
 		}
-        getNotesFromServer();
-    }
+		getNotesFromServer();
+	}
 
 
-    public void openNote(UUID noteUUID) {
+	public void openNote(UUID noteUUID) {
 
-    	if(atr == null) {
+		if (atr == null) {
 
 			Toast.makeText(getBaseContext(), "Nog geen accesstoken. Moment geduld...", Toast.LENGTH_SHORT);
 			return;
 
 		}
 
-        while(atr == null) {
-            Log.e("bla", "geen token");
-        }
+		OkHttpClient client = getUnsafeOkHttpClient();
 
-        OkHttpClient client =  getUnsafeOkHttpClient();
+		String json = "{\"noteID\": \"" + noteUUID.toString() + "\", \"version\": null}";
 
-        String json = "{\"noteID\": \"" + noteUUID.toString()  + "\", \"version\": null}";
+		RequestBody body = RequestBody.create(
+				MediaType.parse("application/json"), json);
 
-        RequestBody body = RequestBody.create(
-                MediaType.parse("application/json"), json);
+		Request request = new Request.Builder()
+				.url(BASE_HTTPS_URL_DB_API + "getnote")
+				.post(body)
+				.addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
+				.build();
 
-        Request request = new Request.Builder()
-                .url(BASE_HTTPS_URL_DB_API + "getnote")
-                .post(body)
-                .addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
-                .build();
+		client.newCall(request).enqueue(new Callback() {
+			@Override
+			public void onFailure(Call call, IOException e) {
+				Log.e("err", e.getMessage());
+			}
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.e("err",e.getMessage());
-            }
+			@Override
+			public void onResponse(Call call, Response response) throws IOException {
+				String resp = response.body().string();
+				Log.e("bla", resp);
+				openNoteActivity(resp);
+			}
+		});
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String resp = response.body().string();
-                Log.e("bla",resp);
-                openNoteActivity(resp);
-            }
-        });
+	}
 
-    }
-    private void openNoteActivity(String note) {
+	private void openNoteActivity(String note) {
 
-        Intent intent = new Intent(this, NoteActivity.class);
-        intent.putExtra(EXTRA_MESSAGE, note);
-        startActivityForResult(intent, NOTE_ACTIVITY_RESULT);
+		Intent intent = new Intent(this, NoteActivity.class);
+		intent.putExtra(EXTRA_MESSAGE, note);
+		startActivityForResult(intent, NOTE_ACTIVITY_RESULT);
 
-    }
+	}
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == NOTE_ACTIVITY_RESULT){
-            if(resultCode == Activity.RESULT_OK) {
-                String resultNote = data.getStringExtra(NoteActivity.NOTE_RESULT);
-                saveNote(resultNote);
-            } else {
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == NOTE_ACTIVITY_RESULT) {
+			if (resultCode == Activity.RESULT_OK) {
+				String resultNote = data.getStringExtra(NoteActivity.NOTE_RESULT);
+				saveNote(resultNote);
+			} else {
 
-            }
-        }
-    }
+			}
+		}
+	}
 
-    private void getNotesFromServer(){
+	private void getNotesFromServer() {
 
-        while(atr == null) {
-            Log.e("bla", "geen token");
-        }
+		if (atr == null) {
+			try {
+				//Gebeurt asynchroon, dus even geduld om te proberen of het lukt
+				Thread.sleep(2500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			if(atr == null) {
+				return;
+			}
+		}
 
-        OkHttpClient client =  getUnsafeOkHttpClient();
+		OkHttpClient client = getUnsafeOkHttpClient();
 
-        Request request = new Request.Builder()
-                .url(BASE_HTTPS_URL_DB_API + "getall")
-                .get()
-                .addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
-                .build();
+		Request request = new Request.Builder()
+				.url(BASE_HTTPS_URL_DB_API + "getall")
+				.get()
+				.addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
+				.build();
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.e("err",e.getMessage());
-            }
+		client.newCall(request).enqueue(new Callback() {
+			@Override
+			public void onFailure(Call call, IOException e) {
+				Log.e("err", e.getMessage());
+			}
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String resp = response.body().string();
-                ObjectMapper om = new ObjectMapper();
-                data = Arrays.asList(om.readValue(resp, Note[].class));
-                Collections.sort(data);
-                //uitvoeren op main thread
-                Handler mainHandler = new Handler(getBaseContext().getMainLooper());
+			@Override
+			public void onResponse(Call call, Response response) throws IOException {
+				String resp = response.body().string();
+				ObjectMapper om = new ObjectMapper();
+				data = Arrays.asList(om.readValue(resp, Note[].class));
+				Collections.sort(data);
+				//uitvoeren op main thread
+				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
 
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.updateData(data);
-                    }
-                };
-                mainHandler.post(runnable);
-            }
-        });
+				Runnable runnable = new Runnable() {
+					@Override
+					public void run() {
+						adapter.updateData(data);
+					}
+				};
+				mainHandler.post(runnable);
+			}
+		});
 
-    }
+	}
 
-    private void saveNote(String note) {
+	private void saveNote(String note) {
 
-        OkHttpClient client =  getUnsafeOkHttpClient();
+		OkHttpClient client = getUnsafeOkHttpClient();
 
-        RequestBody body = RequestBody.create(
-                MediaType.parse("application/json"), note);
-        Request request = new Request.Builder()
-                .url(BASE_HTTPS_URL_DB_API + "addnote")
-                .post(body)
-                .addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
-                .build();
+		RequestBody body = RequestBody.create(
+				MediaType.parse("application/json"), note);
+		Request request = new Request.Builder()
+				.url(BASE_HTTPS_URL_DB_API + "addnote")
+				.post(body)
+				.addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
+				.build();
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.e("err",e.getMessage());
-            }
+		client.newCall(request).enqueue(new Callback() {
+			@Override
+			public void onFailure(Call call, IOException e) {
+				Log.e("err", e.getMessage());
+			}
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
+			@Override
+			public void onResponse(Call call, Response response) throws IOException {
 
-                Handler mainHandler = new Handler(getBaseContext().getMainLooper());
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        getNotesFromServer();
-                    }
-                };
-                mainHandler.post(runnable);
-            }
-        });
+				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
+				Runnable runnable = new Runnable() {
+					@Override
+					public void run() {
+						getNotesFromServer();
+					}
+				};
+				mainHandler.post(runnable);
+			}
+		});
 
-    }
+	}
 
-    private static OkHttpClient getUnsafeOkHttpClient() {
-        try {
-            // Create a trust manager that does not validate certificate chains
-            final TrustManager[] trustAllCerts = new TrustManager[] {
-                    new X509TrustManager() {
-                        @Override
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-                        }
+	private static OkHttpClient getUnsafeOkHttpClient() {
+		try {
+			// Create a trust manager that does not validate certificate chains
+			final TrustManager[] trustAllCerts = new TrustManager[]{
+					new X509TrustManager() {
+						@Override
+						public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+						}
 
-                        @Override
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-                        }
+						@Override
+						public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+						}
 
-                        @Override
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                            return new java.security.cert.X509Certificate[]{};
-                        }
-                    }
-            };
+						@Override
+						public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+							return new java.security.cert.X509Certificate[]{};
+						}
+					}
+			};
 
-            // Install the all-trusting trust manager
-            final SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            // Create an ssl socket factory with our all-trusting manager
-            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+			// Install the all-trusting trust manager
+			final SSLContext sslContext = SSLContext.getInstance("SSL");
+			sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+			// Create an ssl socket factory with our all-trusting manager
+			final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-            OkHttpClient.Builder builder = new OkHttpClient.Builder();
-            builder.sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0]);
-            builder.hostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            });
+			OkHttpClient.Builder builder = new OkHttpClient.Builder();
+			builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+			builder.hostnameVerifier(new HostnameVerifier() {
+				@Override
+				public boolean verify(String hostname, SSLSession session) {
+					return true;
+				}
+			});
 
-            OkHttpClient okHttpClient = builder.build();
-            return okHttpClient;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+			OkHttpClient okHttpClient = builder.build();
+			return okHttpClient;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    private ScheduledExecutorService getTokenRefresher(){
+	private ScheduledExecutorService getTokenRefresher() {
 
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+		SharedPreferences settings = getSharedPreferences(CredentialsActivity.PREFS_ZAKBOEKJE, 0);
+		String username = settings.getString(CredentialsActivity.PREFS_USERNAME, "").toString();
+		String password = settings.getString(CredentialsActivity.PREFS_PASS, "").toString();
 
-        scheduler.scheduleAtFixedRate(new Runnable() {
-                public void run() {
-                    setToken();
-            }
-        }, 0, 10, TimeUnit.MINUTES);
+		if (username.equalsIgnoreCase("") || password.equalsIgnoreCase("")) {
+			Log.e("bla", "niets");
+			Intent intent = new Intent(getApplicationContext(), CredentialsActivity.class);
+			startActivity(intent);
+		} else {
 
-        return  scheduler;
-    }
+			ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        tokenRefresher.shutdown();
-    }
+			scheduler.scheduleAtFixedRate(new Runnable() {
+				public void run() {
+					setToken();
+				}
+			}, 0, 10, TimeUnit.MINUTES);
 
-    private void setToken() {
+			return scheduler;
+		}
+		return null;
+	}
 
-        Log.e("bla", "setting token...");
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		tokenRefresher.shutdown();
+	}
 
-        String json = "{\"username\":\"ruud\", \"password\":\"secret\"}";
+	private void setToken() {
 
-        RequestBody body = RequestBody.create(
-                MediaType.parse("application/json"), json);
+		Log.e("bla", "setting token...");
 
-        Request request = new Request.Builder()
-                .url("https://40.114.240.242:8085/api/auth/generatetoken")
-                .post(body)
-                .build();
+		SharedPreferences settings = getSharedPreferences(CredentialsActivity.PREFS_ZAKBOEKJE, 0);
+		String username = settings.getString(CredentialsActivity.PREFS_USERNAME, "").toString();
+		String password = settings.getString(CredentialsActivity.PREFS_PASS, "").toString();
 
-        OkHttpClient client =  getUnsafeOkHttpClient();
+		String json = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.e("err",e.getMessage());
-            }
+		RequestBody body = RequestBody.create(
+				MediaType.parse("application/json"), json);
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String resp = response.body().string();
-                ObjectMapper om = new ObjectMapper();
-                atr = om.readValue(resp, AccesTokenRequest.class);
-            }
-        });
-    }
+		Request request = new Request.Builder()
+				.url("https://40.114.240.242:8085/api/auth/generatetoken")
+				.post(body)
+				.build();
+
+		OkHttpClient client = getUnsafeOkHttpClient();
+
+		client.newCall(request).enqueue(new Callback() {
+			@Override
+			public void onFailure(Call call, IOException e) {
+				Log.e("err", e.getMessage());
+			}
+
+			@Override
+			public void onResponse(Call call, Response response) throws IOException {
+				if (response.code() == 200) {
+					String resp = response.body().string();
+					ObjectMapper om = new ObjectMapper();
+					atr = om.readValue(resp, AccesTokenRequest.class);
+				}
+			}
+		});
+	}
 }

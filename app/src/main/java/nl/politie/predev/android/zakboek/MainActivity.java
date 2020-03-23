@@ -86,6 +86,15 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
+		FloatingActionButton fabSettings = findViewById(R.id.activity_main_password);
+		fabSettings.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Intent i = new Intent(view.getContext(), CredentialsActivity.class);
+				startActivity(i);
+			}
+		});
+
 	}
 
 	private RecyclerViewClickListener getRecyclerViewClickListener() {
@@ -248,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void saveNote(String note) {
 
-		
+
 		OkHttpClient client = getUnsafeOkHttpClient();
 
 		RequestBody body = RequestBody.create(

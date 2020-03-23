@@ -4,6 +4,12 @@
 	android:orientation="vertical" android:layout_width="match_parent"
 	android:layout_height="match_parent">
 
+	<TextView
+		android:id="@+id/activity_creds_uname_hint"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text='Username ("ruud"):' />
+
 	<EditText
 		android:id="@+id/activity_creds_username"
 		android:layout_width="match_parent"
@@ -13,6 +19,12 @@
 		android:text="Username"
 		android:visibility="visible"
 		tools:visibility="visible" />
+
+	<TextView
+		android:id="@+id/activity_creds_pw_hint"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text='Password ("secret"):' />
 
 	<EditText
 		android:id="@+id/activity_creds_pw"

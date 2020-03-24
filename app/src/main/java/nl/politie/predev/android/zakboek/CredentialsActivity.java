@@ -82,7 +82,7 @@ public class CredentialsActivity extends AppCompatActivity {
 				if (response.code() == 200) {
 					SharedPreferences.Editor editor = settings.edit();
 					editor.putString(PREFS_USERNAME, enteredUsername);
-					editor.putString(PREFS_PASS,enteredPassword);
+					editor.putString(PREFS_PASS, enteredPassword);
 					editor.commit();
 					finish();
 				}else{

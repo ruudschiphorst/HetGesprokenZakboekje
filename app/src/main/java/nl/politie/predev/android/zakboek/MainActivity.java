@@ -150,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onResponse(Call call, Response response) throws IOException {
 				String resp = response.body().string();
+				Log.e("bla","komt ie");
 				Log.e("bla", resp);
 				openNoteActivity(resp);
 			}

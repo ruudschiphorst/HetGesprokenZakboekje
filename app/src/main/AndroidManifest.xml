@@ -26,7 +26,10 @@
             android:parentActivityName=".MainActivity"/>
 		<service android:name=".InsecureStempolRpcSpeechService" />
 		<activity android:name=".CredentialsActivity" />
-    </application>
+		<activity android:name=".PictureActivity"
+			android:parentActivityName=".NoteActivity"/>
 
+    </application>
+	<uses-feature android:name="android.hardware.camera"></uses-feature>
 
 </manifest>

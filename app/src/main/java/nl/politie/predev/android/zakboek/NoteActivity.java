@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -14,12 +15,19 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 public class NoteActivity extends AppCompatActivity {
 
+	public static final String EXTRA_MESSAGE_NOTE = "EXTRA_MESSAGE_NOTE";
+	private static final int CAMERA_REQUEST = 1888;
 	public static final String NOTE_RESULT = "note_result";
 	private boolean voiceInputActive = false;
 	private Note n = null;
@@ -27,6 +35,7 @@ public class NoteActivity extends AppCompatActivity {
 	private TextView textView = null;
 	private InsecureStempolRpcSpeechService speechService;
 	private VoiceRecorder voiceRecorder;
+	private List<Multimedia> noteMultimedia = new ArrayList<Multimedia>();
 
 	private final VoiceRecorder.Callback voiceCallback = new VoiceRecorder.Callback() {
 
@@ -139,8 +148,11 @@ public class NoteActivity extends AppCompatActivity {
 		if(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) !=null) {
 			ObjectMapper om = new ObjectMapper();
 			try {
-				n = om.readValue(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE), Note.class);
-			} catch (IOException e) {
+				String note = getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE);
+				Log.e("bla",note);
+//				n = new Note();
+				n = om.readValue(note, Note.class);
+			} catch (Exception e) {
 				Log.e("Err", "Error", e);
 				finish();
 			}
@@ -175,11 +187,50 @@ public class NoteActivity extends AppCompatActivity {
 			}
 		});
 
+		final FloatingActionButton fabCamera = findViewById(R.id.note_fab_camera);
+		fabCamera.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				captureCameraImage();
+			}
+		});
+
+	}
+
+	private void captureCameraImage() {
+		Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+		startActivityForResult(cameraIntent, CAMERA_REQUEST);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+
+			Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			bitmap.compress(Bitmap.CompressFormat.JPEG,80,stream);
+			byte[] byteArray = stream.toByteArray();
+			try {
+				stream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			Multimedia multimedia = new Multimedia();
+			multimedia.setContent(Base64.getEncoder().encodeToString(byteArray));
+			noteMultimedia.add(multimedia);
+
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+//		if(this.n.getMultimedia().size() >0){
+//			Intent intent = new Intent(this, PictureActivity.class);
+//			intent.putExtra(EXTRA_MESSAGE_NOTE, this.n.getMultimedia().get(0).getContent());
+//			startActivity(intent);
+//		}
 	}
 
 	@Override
@@ -201,6 +252,9 @@ public class NoteActivity extends AppCompatActivity {
 		n.setNote_text(textView.getText().toString());
 		n.setGenerated_at(null);
 		n.setId(null);
+		if(noteMultimedia.size() >0) {
+			n.setMultimedia(noteMultimedia);
+		}
 		ObjectMapper om = new ObjectMapper();
 		String note = null;
 

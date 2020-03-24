@@ -13,6 +13,7 @@ public class Multimedia {
 	private UUID noteID;
 	private Integer noteVersion;
 	private boolean isDeleted;
+	private String content;
 
 	public boolean isDeleted(){
 		return isDeleted;
@@ -62,5 +63,10 @@ public class Multimedia {
 	public void setFiletype(String filetype) {
 		this.filetype = filetype;
 	}
-
+	public String getContent() {
+		return content;
+	}
+	public void setContent(String content) {
+		this.content = content;
+	}
 }

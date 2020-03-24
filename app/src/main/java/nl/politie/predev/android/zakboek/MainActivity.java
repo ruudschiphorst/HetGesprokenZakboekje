@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 	private ScheduledExecutorService tokenRefresher;
 	public static final String EXTRA_MESSAGE = "ZAKBOEKJE_NOTE";
 	public static final int NOTE_ACTIVITY_RESULT = 1;
-	private static final String BASE_HTTPS_URL_DB_API = "https://40.114.240.242:8086/";
+	private static final String BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
 
 
 	public interface RecyclerViewClickListener {
@@ -123,12 +123,12 @@ public class MainActivity extends AppCompatActivity {
 
 		if (atr == null) {
 
-			Toast.makeText(getBaseContext(), "Nog geen accesstoken. Moment geduld...", Toast.LENGTH_SHORT);
+			Toast.makeText(getBaseContext(), "Nog geen accesstoken. Moment geduld...", Toast.LENGTH_SHORT).show();
 			return;
 
 		}
 
-		OkHttpClient client = getUnsafeOkHttpClient();
+		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
 
 		String json = "{\"noteID\": \"" + noteUUID.toString() + "\", \"version\": null}";
 
@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 		}
 
-		OkHttpClient client = getUnsafeOkHttpClient();
+		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
 
 		Request request = new Request.Builder()
 				.url(BASE_HTTPS_URL_DB_API + "getall")
@@ -258,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
 	private void saveNote(String note) {
 
 
-		OkHttpClient client = getUnsafeOkHttpClient();
+		OkHttpClient client = new OkHttpClient();//getUnsafeOkHttpClient();
 
 		RequestBody body = RequestBody.create(
 				MediaType.parse("application/json"), note);
@@ -378,11 +378,11 @@ public class MainActivity extends AppCompatActivity {
 				MediaType.parse("application/json"), json);
 
 		Request request = new Request.Builder()
-				.url("https://40.114.240.242:8085/api/auth/generatetoken")
+				.url("https://stempolextras.westeurope.cloudapp.azure.com:8085/api/auth/generatetoken")
 				.post(body)
 				.build();
 
-		OkHttpClient client = getUnsafeOkHttpClient();
+		OkHttpClient client =  new OkHttpClient();  //getUnsafeOkHttpClient();
 
 		client.newCall(request).enqueue(new Callback() {
 			@Override
@@ -398,6 +398,7 @@ public class MainActivity extends AppCompatActivity {
 					atr = om.readValue(resp, AccesTokenRequest.class);
 				}else{
 					//TODO
+					Log.e("bla",response.body().string());
 				}
 			}
 		});

@@ -1,5 +1,7 @@
 package nl.politie.predev.android.zakboek;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.UUID;
 
 public class Multimedia {
@@ -14,6 +16,8 @@ public class Multimedia {
 	private Integer noteVersion;
 	private boolean isDeleted;
 	private String content;
+	@JsonIgnore
+	private String localFilePath;
 
 	public boolean isDeleted(){
 		return isDeleted;
@@ -68,5 +72,13 @@ public class Multimedia {
 	}
 	public void setContent(String content) {
 		this.content = content;
+	}
+	@JsonIgnore
+	public String getLocalFilePath() {
+		return localFilePath;
+	}
+	@JsonIgnore
+	public void setLocalFilePath(String localFilePath) {
+		this.localFilePath = localFilePath;
 	}
 }

@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 	private RecyclerView recyclerView;
 	private MainRecyclerViewAdapter adapter;
 	private RecyclerView.LayoutManager layoutManager;
-	private AccesTokenRequest atr;
+//	private AccesTokenRequest atr;
 	List<Note> data = new ArrayList<Note>();
 	private ScheduledExecutorService tokenRefresher;
 	public static final String EXTRA_MESSAGE = "ZAKBOEKJE_NOTE";
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
 		RecyclerViewClickListener retval = new RecyclerViewClickListener() {
 			@Override
 			public void onItemClicked(UUID uuid) {
-				openNote(uuid);
+				openNoteActivity(uuid.toString());
 			}
 		};
 		return retval;
@@ -118,44 +118,6 @@ public class MainActivity extends AppCompatActivity {
 		getNotesFromServer();
 	}
 
-
-	private void openNote(UUID noteUUID) {
-
-		if (atr == null) {
-
-			Toast.makeText(getBaseContext(), "Nog geen accesstoken. Moment geduld...", Toast.LENGTH_SHORT).show();
-			return;
-
-		}
-
-		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
-
-		String json = "{\"noteID\": \"" + noteUUID.toString() + "\", \"version\": null}";
-
-		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), json);
-
-		Request request = new Request.Builder()
-				.url(BASE_HTTPS_URL_DB_API + "getnote")
-				.post(body)
-				.addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
-				.build();
-
-		client.newCall(request).enqueue(new Callback() {
-			@Override
-			public void onFailure(Call call, IOException e) {
-				Log.e("err", e.getMessage());
-			}
-
-			@Override
-			public void onResponse(Call call, Response response) throws IOException {
-				String resp = response.body().string();
-				openNoteActivity(resp);
-			}
-		});
-
-	}
-
 	private void openNoteActivity(String note) {
 
 		Intent intent = new Intent(this, NoteActivity.class);
@@ -169,8 +131,9 @@ public class MainActivity extends AppCompatActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == NOTE_ACTIVITY_RESULT) {
 			if (resultCode == Activity.RESULT_OK) {
-				String resultNote = data.getStringExtra(NoteActivity.NOTE_RESULT);
-				saveNote(resultNote);
+				getNotesFromServer();
+//				String resultNote = data.getStringExtra(NoteActivity.NOTE_RESULT);
+//				saveNote(resultNote);
 			} else {
 
 			}
@@ -187,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
 
 		while(true){
 
-			if(atr == null) {
+			if(AccesTokenRequest.accesTokenRequest == null) {
 				if(tries > 5) {
 					//Meer dan 5 seconden gewacht -> geen nut. Stop maar met proberen en wacht tot onResume() opnieuw wordt aangeroepen,
 					//bijvoorbeeld omdat gebruiker het password scherm heeft bijgewerkt.
@@ -206,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 		}
 
-		if (atr == null) {
+		if (AccesTokenRequest.accesTokenRequest == null) {
 			try {
 				//Gebeurt asynchroon, dus even geduld om te proberen of het lukt
 				Thread.sleep(2500);
@@ -214,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
 				//TODO
 				e.printStackTrace();
 			}
-			if(atr == null) {
+			if(AccesTokenRequest.accesTokenRequest == null) {
 				return;
 			}
 		}
@@ -224,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
 		Request request = new Request.Builder()
 				.url(BASE_HTTPS_URL_DB_API + "getall")
 				.get()
-				.addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
+				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
 				.build();
 
 		client.newCall(request).enqueue(new Callback() {
@@ -246,41 +209,6 @@ public class MainActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						adapter.updateData(data);
-					}
-				};
-				mainHandler.post(runnable);
-			}
-		});
-
-	}
-
-	private void saveNote(String note) {
-
-
-		OkHttpClient client = new OkHttpClient();//getUnsafeOkHttpClient();
-
-		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), note);
-		Request request = new Request.Builder()
-				.url(BASE_HTTPS_URL_DB_API + "addnote")
-				.post(body)
-				.addHeader("Authorization", atr.getTokenType() + " " + atr.getAccessToken())
-				.build();
-
-		client.newCall(request).enqueue(new Callback() {
-			@Override
-			public void onFailure(Call call, IOException e) {
-				Log.e("err", e.getMessage());
-			}
-
-			@Override
-			public void onResponse(Call call, Response response) throws IOException {
-
-				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
-				Runnable runnable = new Runnable() {
-					@Override
-					public void run() {
-						getNotesFromServer();
 					}
 				};
 				mainHandler.post(runnable);
@@ -351,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
 				if (response.code() == 200) {
 					String resp = response.body().string();
 					ObjectMapper om = new ObjectMapper();
-					atr = om.readValue(resp, AccesTokenRequest.class);
+					AccesTokenRequest.accesTokenRequest = om.readValue(resp, AccesTokenRequest.class);
 				}else{
 					//TODO
 					Log.e("bla",response.body().string());

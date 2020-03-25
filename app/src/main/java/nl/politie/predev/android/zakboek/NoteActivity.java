@@ -5,14 +5,19 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -20,15 +25,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class NoteActivity extends AppCompatActivity {
 
+	private static final String BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
 	public static final String EXTRA_MESSAGE_NOTE = "EXTRA_MESSAGE_NOTE";
+	public static final String EXTRA_MESSAGE_NOTE_CACHE = "EXTRA_MESSAGE_NOTE_CACHE";
 	private static final int CAMERA_REQUEST = 1888;
 	public static final String NOTE_RESULT = "note_result";
 	private boolean voiceInputActive = false;
@@ -42,23 +61,25 @@ public class NoteActivity extends AppCompatActivity {
 	private RecyclerView recyclerView;
 	private RecyclerView.LayoutManager layoutManager;
 
+	private String currentPhotoPath;
+
 	public interface RecyclerViewClickListener {
-		public void onItemClicked(String imageContent);
+		public void onItemClicked(String multimediaID);
 	}
 
 	private RecyclerViewClickListener getRecyclerViewClickListener() {
 		RecyclerViewClickListener retval = new RecyclerViewClickListener() {
 			@Override
-			public void onItemClicked(String imageContent) {
-				openFoto(imageContent);
+			public void onItemClicked(String multimediaID) {
+				openFoto(multimediaID);
 			}
 		};
 		return retval;
 	}
 
-	private void openFoto(String imageContent){
+	private void openFoto(String multimediaID){
 		Intent intent = new Intent(this, PictureActivity.class);
-		intent.putExtra(EXTRA_MESSAGE_NOTE, imageContent);
+		intent.putExtra(EXTRA_MESSAGE_NOTE, multimediaID);
 		startActivity(intent);
 	}
 
@@ -165,29 +186,23 @@ public class NoteActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_note);
+
+		if(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) !=null) {
+			openNote(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE));
+		}else{
+			setContentView(R.layout.activity_note);
+			initViews();
+			n = new Note();
+			title.setText("Nieuwe notitie");
+		}
+
+	}
+
+	private void initViews() {
 
 		title = findViewById(R.id.note_tv_title);
 		textView = findViewById(R.id.note_tv_text);
 
-		if(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) !=null) {
-			ObjectMapper om = new ObjectMapper();
-			try {
-				String note = getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE);
-				Log.e("bla",note);
-				n = om.readValue(note, Note.class);
-				this.noteMultimedia = n.getMultimedia();
-			} catch (Exception e) {
-				Log.e("Err", "Error", e);
-				finish();
-			}
-
-			title.setText(n.getTitle());
-			textView.setText(n.getNote_text());
-		}else{
-			n = new Note();
-			title.setText("Nieuwe notitie");
-		}
 		ImageButton ib = findViewById(R.id.note_btn_save);
 		ib.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -232,35 +247,21 @@ public class NoteActivity extends AppCompatActivity {
 
 	}
 
-	private void captureCameraImage() {
-		Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-		startActivityForResult(cameraIntent, CAMERA_REQUEST);
-	}
-
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
-			Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+			try{
+				byte[] mijnBytes = Files.readAllBytes(Paths.get(currentPhotoPath));
+				Multimedia multimedia = new Multimedia();
+				multimedia.setContent(Base64.getEncoder().encodeToString(mijnBytes));
+				multimedia.setLocalFilePath(currentPhotoPath);
+				noteMultimedia.add(multimedia);
+				adapter.updateData(noteMultimedia);
+			} catch (Exception e) {
 
-//			int size = bitmap.getRowBytes() * bitmap.getHeight();
-//			ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-//			bitmap.copyPixelsToBuffer(byteBuffer);
-//			byte[] byteArray = byteBuffer.array();
-
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			bitmap.compress(Bitmap.CompressFormat.JPEG,100,stream);
-			byte[] byteArray = stream.toByteArray();
-			try {
-				stream.close();
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
-			Multimedia multimedia = new Multimedia();
-			multimedia.setContent(Base64.getEncoder().encodeToString(byteArray));
-			noteMultimedia.add(multimedia);
-			adapter.updateData(noteMultimedia);
 		}
 
 	}
@@ -292,6 +293,7 @@ public class NoteActivity extends AppCompatActivity {
 		if(noteMultimedia.size() >0) {
 			n.setMultimedia(noteMultimedia);
 		}
+
 		ObjectMapper om = new ObjectMapper();
 		String note = null;
 
@@ -300,9 +302,8 @@ public class NoteActivity extends AppCompatActivity {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		saveNote(note);
 		Intent returnIntent = new Intent();
-		returnIntent.putExtra(NOTE_RESULT, note);
 		setResult(Activity.RESULT_OK, returnIntent);
 		finish();
 	}
@@ -330,5 +331,141 @@ public class NoteActivity extends AppCompatActivity {
 			return valueIfNull;
 		}
 
+	}
+
+	private void captureCameraImage() {
+		Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+			// Create the File where the photo should go
+			File photoFile = null;
+			try {
+				photoFile = createImageFile();
+			} catch (IOException ex) {
+				// Error occurred while creating the File
+			}
+			// Continue only if the File was successfully created
+			if (photoFile != null) {
+				Uri photoURI = FileProvider.getUriForFile(this,
+						"com.example.android.fileprovider",
+						photoFile);
+				cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+				startActivityForResult(cameraIntent, CAMERA_REQUEST);
+			}
+		}
+
+
+//		startActivityForResult(cameraIntent, CAMERA_REQUEST);
+	}
+
+	private File createImageFile() throws IOException {
+		// Create an image file name
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		String imageFileName = "JPEG_" + timeStamp + "_";
+		File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+		File image = File.createTempFile(
+				imageFileName,  /* prefix */
+				".jpg",         /* suffix */
+				storageDir      /* directory */
+		);
+
+		// Save a file: path for use with ACTION_VIEW intents
+		currentPhotoPath = image.getAbsolutePath();
+		return image;
+	}
+
+	private void saveNote(String note) {
+
+		OkHttpClient client = new OkHttpClient();//getUnsafeOkHttpClient();
+
+		RequestBody body = RequestBody.create(
+				MediaType.parse("application/json"), note);
+		Request request = new Request.Builder()
+				.url(BASE_HTTPS_URL_DB_API + "addnote")
+				.post(body)
+				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.build();
+
+		client.newCall(request).enqueue(new Callback() {
+			@Override
+			public void onFailure(Call call, IOException e) {
+				Log.e("err", e.getMessage());
+			}
+
+			@Override
+			public void onResponse(Call call, Response response) throws IOException {
+
+				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
+				Runnable runnable = new Runnable() {
+					@Override
+					public void run() {
+						finish();
+					}
+				};
+				mainHandler.post(runnable);
+			}
+		});
+
+	}
+
+		private void openNote(String noteUUID) {
+
+		if (AccesTokenRequest.accesTokenRequest == null) {
+
+//			Toast.makeText(getBaseContext(), "Nog geen accesstoken. Moment geduld...", Toast.LENGTH_SHORT).show();
+			return;
+
+		}
+
+		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
+
+		String json = "{\"noteID\": \"" + noteUUID + "\", \"version\": null}";
+
+		RequestBody body = RequestBody.create(
+				MediaType.parse("application/json"), json);
+
+		Request request = new Request.Builder()
+				.url(BASE_HTTPS_URL_DB_API + "getnote")
+				.post(body)
+				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.build();
+
+		client.newCall(request).enqueue(new Callback() {
+			@Override
+			public void onFailure(Call call, IOException e) {
+				Log.e("err", e.getMessage());
+			}
+
+			@Override
+			public void onResponse(Call call, Response response) throws IOException {
+				final String resp = response.body().string();
+				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
+				Runnable runnable = new Runnable() {
+					@Override
+					public void run() {
+						handleFetchedNote(resp);
+					}
+				};
+				mainHandler.post(runnable);
+
+			}
+		});
+
+	}
+
+	private void handleFetchedNote(String note) {
+		setContentView(R.layout.activity_note);
+		initViews();
+		ObjectMapper om = new ObjectMapper();
+		try {
+			n = om.readValue(note, Note.class);
+			this.noteMultimedia = n.getMultimedia();
+			adapter.updateData(noteMultimedia);
+		} catch (Exception e) {
+			Log.e("Err", "Error", e);
+			finish();
+		}
+
+		title.setText(n.getTitle());
+		textView.setText(n.getNote_text());
 	}
 }

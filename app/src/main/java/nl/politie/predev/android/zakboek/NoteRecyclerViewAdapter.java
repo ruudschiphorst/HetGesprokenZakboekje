@@ -2,6 +2,7 @@ package nl.politie.predev.android.zakboek;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -58,13 +59,17 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
 		byte[] bytes = Base64.getDecoder().decode(data.get(position).getContent());
 		Bitmap bitmap = BitmapFactory.decodeByteArray(bytes,0, bytes.length);
         holder.imageview.setImageBitmap(bitmap);
-        holder.imageview.setTag(data.get(position).getContent());
+        if(data.get(position).getMultimediaID() !=null) {
+        	holder.imageview.setTag(data.get(position).getMultimediaID().toString());
+		}else{
+        	holder.imageview.setTag(data.get(position).getLocalFilePath());
+		}
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 ImageView iv = (ImageView) view;
+
                 recyclerViewClickListener.onItemClicked(iv.getTag().toString());
-                Log.i("bla",iv.getTag().toString());
             }
         });
     }

@@ -13,15 +13,17 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Date;
 import java.util.List;
 
 public class NoteActivity extends AppCompatActivity {
@@ -35,7 +37,30 @@ public class NoteActivity extends AppCompatActivity {
 	private TextView textView = null;
 	private InsecureStempolRpcSpeechService speechService;
 	private VoiceRecorder voiceRecorder;
-	private List<Multimedia> noteMultimedia = new ArrayList<Multimedia>();
+	private List<Multimedia> noteMultimedia;// = new ArrayList<Multimedia>();
+	private NoteRecyclerViewAdapter adapter;
+	private RecyclerView recyclerView;
+	private RecyclerView.LayoutManager layoutManager;
+
+	public interface RecyclerViewClickListener {
+		public void onItemClicked(String imageContent);
+	}
+
+	private RecyclerViewClickListener getRecyclerViewClickListener() {
+		RecyclerViewClickListener retval = new RecyclerViewClickListener() {
+			@Override
+			public void onItemClicked(String imageContent) {
+				openFoto(imageContent);
+			}
+		};
+		return retval;
+	}
+
+	private void openFoto(String imageContent){
+		Intent intent = new Intent(this, PictureActivity.class);
+		intent.putExtra(EXTRA_MESSAGE_NOTE, imageContent);
+		startActivity(intent);
+	}
 
 	private final VoiceRecorder.Callback voiceCallback = new VoiceRecorder.Callback() {
 
@@ -150,8 +175,8 @@ public class NoteActivity extends AppCompatActivity {
 			try {
 				String note = getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE);
 				Log.e("bla",note);
-//				n = new Note();
 				n = om.readValue(note, Note.class);
+				this.noteMultimedia = n.getMultimedia();
 			} catch (Exception e) {
 				Log.e("Err", "Error", e);
 				finish();
@@ -195,6 +220,16 @@ public class NoteActivity extends AppCompatActivity {
 			}
 		});
 
+		recyclerView = (RecyclerView) findViewById(R.id.note_recycler_view);
+		recyclerView.setHasFixedSize(true);
+
+		layoutManager = new LinearLayoutManager(this);
+		((LinearLayoutManager) layoutManager).setOrientation(RecyclerView.VERTICAL);
+		recyclerView.setLayoutManager(layoutManager);
+
+		adapter = new NoteRecyclerViewAdapter(noteMultimedia, getRecyclerViewClickListener());
+		recyclerView.setAdapter(adapter);
+
 	}
 
 	private void captureCameraImage() {
@@ -208,8 +243,14 @@ public class NoteActivity extends AppCompatActivity {
 		if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
 			Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+
+//			int size = bitmap.getRowBytes() * bitmap.getHeight();
+//			ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+//			bitmap.copyPixelsToBuffer(byteBuffer);
+//			byte[] byteArray = byteBuffer.array();
+
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			bitmap.compress(Bitmap.CompressFormat.JPEG,80,stream);
+			bitmap.compress(Bitmap.CompressFormat.JPEG,100,stream);
 			byte[] byteArray = stream.toByteArray();
 			try {
 				stream.close();
@@ -219,18 +260,14 @@ public class NoteActivity extends AppCompatActivity {
 			Multimedia multimedia = new Multimedia();
 			multimedia.setContent(Base64.getEncoder().encodeToString(byteArray));
 			noteMultimedia.add(multimedia);
-
+			adapter.updateData(noteMultimedia);
 		}
+
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-//		if(this.n.getMultimedia().size() >0){
-//			Intent intent = new Intent(this, PictureActivity.class);
-//			intent.putExtra(EXTRA_MESSAGE_NOTE, this.n.getMultimedia().get(0).getContent());
-//			startActivity(intent);
-//		}
 	}
 
 	@Override
@@ -294,5 +331,4 @@ public class NoteActivity extends AppCompatActivity {
 		}
 
 	}
-
 }

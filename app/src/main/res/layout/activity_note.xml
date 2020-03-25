@@ -9,8 +9,9 @@
 
 	<EditText
 		android:id="@+id/note_tv_title"
-		android:layout_width="match_parent"
+		android:layout_width="0dp"
 		android:layout_height="wrap_content"
+		android:layout_marginStart="8dp"
 		android:layout_marginTop="16dp"
 		android:enabled="true"
 		android:maxLength="40"
@@ -20,24 +21,28 @@
 		android:paddingBottom="10dp"
 		android:textSize="24sp"
 		android:textStyle="bold"
-		app:layout_constraintEnd_toStartOf="@id/note_btn_save"
-		app:layout_constraintHorizontal_weight="1"
+		app:layout_constraintEnd_toStartOf="@+id/note_btn_save"
 		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintWidth_default="spread"
 		app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/note_tv_text"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:enabled="true"
-        android:gravity="top"
-        android:paddingLeft="10dp"
-        android:paddingTop="10dp"
-        android:paddingRight="10dp"
-        android:paddingBottom="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/note_tv_title"
-        app:layout_constraintVertical_weight="1" />
+	<EditText
+		android:id="@+id/note_tv_text"
+		android:layout_width="0dp"
+		android:layout_height="0dp"
+		android:layout_marginStart="8dp"
+		android:enabled="true"
+		android:gravity="top"
+		android:paddingLeft="10dp"
+		android:paddingTop="10dp"
+		android:paddingRight="10dp"
+		android:paddingBottom="10dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toStartOf="@id/note_recycler_view"
+		app:layout_constraintHorizontal_weight="0.6"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/note_tv_title"
+		app:layout_constraintVertical_weight="1" />
 
     <ImageButton
         android:id="@+id/note_btn_save"
@@ -65,6 +70,18 @@
 		app:srcCompat="@android:drawable/ic_menu_camera"
 		app:layout_constraintBottom_toBottomOf="parent"
 		app:layout_constraintEnd_toEndOf="parent"/>
+
+	<androidx.recyclerview.widget.RecyclerView
+		android:id="@+id/note_recycler_view"
+		android:layout_width="wrap_content"
+		android:layout_height="0dp"
+		android:layout_marginBottom="8dp"
+		app:layout_constraintBottom_toBottomOf="@+id/note_tv_text"
+		app:layout_constraintHorizontal_weight="0.4"
+		app:layout_constraintLeft_toRightOf="@id/note_tv_text"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/note_tv_title"
+		app:layout_constraintBottom_toTopOf="@id/note_fab_camera"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

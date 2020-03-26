@@ -132,8 +132,6 @@ public class MainActivity extends AppCompatActivity {
 		if (requestCode == NOTE_ACTIVITY_RESULT) {
 			if (resultCode == Activity.RESULT_OK) {
 				getNotesFromServer();
-//				String resultNote = data.getStringExtra(NoteActivity.NOTE_RESULT);
-//				saveNote(resultNote);
 			} else {
 
 			}
@@ -166,19 +164,6 @@ public class MainActivity extends AppCompatActivity {
 			}else{
 				//Er is inmiddels een token, ga maar uit de lus
 				break;
-			}
-		}
-
-		if (AccesTokenRequest.accesTokenRequest == null) {
-			try {
-				//Gebeurt asynchroon, dus even geduld om te proberen of het lukt
-				Thread.sleep(2500);
-			} catch (InterruptedException e) {
-				//TODO
-				e.printStackTrace();
-			}
-			if(AccesTokenRequest.accesTokenRequest == null) {
-				return;
 			}
 		}
 

@@ -56,7 +56,7 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
     public void onBindViewHolder(final NoteRecyclerViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-		byte[] bytes = Base64.getDecoder().decode(data.get(position).getContent());
+		byte[] bytes = Base64.getDecoder().decode(data.get(position).getThumbnailContent());
 		Bitmap bitmap = BitmapFactory.decodeByteArray(bytes,0, bytes.length);
         holder.imageview.setImageBitmap(bitmap);
         if(data.get(position).getMultimediaID() !=null) {

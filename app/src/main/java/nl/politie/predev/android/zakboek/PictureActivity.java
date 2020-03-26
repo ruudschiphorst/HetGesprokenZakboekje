@@ -43,9 +43,11 @@ public class PictureActivity extends AppCompatActivity {
 	}
 
 	private void getImageContent(String multimediaID) {
+
 		Log.e("sdad", multimediaID);
 
-		if(multimediaID.contains("/Android")) {
+		//Base64 content bevat geen slash
+		if(multimediaID.contains("/")) {
 			try{
 				setImage(Files.readAllBytes(Paths.get(multimediaID)));
 			}catch (Exception e){

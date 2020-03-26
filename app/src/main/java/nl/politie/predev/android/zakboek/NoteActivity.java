@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -47,9 +48,7 @@ public class NoteActivity extends AppCompatActivity {
 
 	private static final String BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
 	public static final String EXTRA_MESSAGE_NOTE = "EXTRA_MESSAGE_NOTE";
-	public static final String EXTRA_MESSAGE_NOTE_CACHE = "EXTRA_MESSAGE_NOTE_CACHE";
 	private static final int CAMERA_REQUEST = 1888;
-	public static final String NOTE_RESULT = "note_result";
 	private boolean voiceInputActive = false;
 	private Note n = null;
 	private TextView title = null;
@@ -60,6 +59,7 @@ public class NoteActivity extends AppCompatActivity {
 	private NoteRecyclerViewAdapter adapter;
 	private RecyclerView recyclerView;
 	private RecyclerView.LayoutManager layoutManager;
+	private List<String> createdImages = new ArrayList<String>();
 
 	private String currentPhotoPath;
 
@@ -77,7 +77,7 @@ public class NoteActivity extends AppCompatActivity {
 		return retval;
 	}
 
-	private void openFoto(String multimediaID){
+	private void openFoto(String multimediaID) {
 		Intent intent = new Intent(this, PictureActivity.class);
 		intent.putExtra(EXTRA_MESSAGE_NOTE, multimediaID);
 		startActivity(intent);
@@ -87,7 +87,6 @@ public class NoteActivity extends AppCompatActivity {
 
 		@Override
 		public void onVoiceStart() {
-//			showStatus(true);
 			if (speechService != null) {
 				speechService.startRecognizing(voiceRecorder.getSampleRate());
 			}
@@ -102,7 +101,6 @@ public class NoteActivity extends AppCompatActivity {
 
 		@Override
 		public void onVoiceEnd() {
-//			showStatus(false);
 			if (speechService != null) {
 				speechService.finishRecognizing();
 			}
@@ -116,7 +114,6 @@ public class NoteActivity extends AppCompatActivity {
 		public void onServiceConnected(ComponentName componentName, IBinder binder) {
 			speechService = InsecureStempolRpcSpeechService.from(binder);
 			speechService.addListener(mSpeechServiceListener);
-//			mStatus.setVisibility(View.VISIBLE);
 		}
 
 		@Override
@@ -187,18 +184,21 @@ public class NoteActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		if(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) !=null) {
+		if (getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) != null) {
 			openNote(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE));
-		}else{
-			setContentView(R.layout.activity_note);
+		} else {
 			initViews();
 			n = new Note();
+			noteMultimedia = new ArrayList<Multimedia>();
+			n.setMultimedia(new ArrayList<Multimedia>());
 			title.setText("Nieuwe notitie");
 		}
 
 	}
 
 	private void initViews() {
+
+		setContentView(R.layout.activity_note);
 
 		title = findViewById(R.id.note_tv_title);
 		textView = findViewById(R.id.note_tv_text);
@@ -252,15 +252,21 @@ public class NoteActivity extends AppCompatActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
-			try{
-				byte[] mijnBytes = Files.readAllBytes(Paths.get(currentPhotoPath));
+			try {
+
+				byte[] imagedata = Files.readAllBytes(Paths.get(currentPhotoPath));
+				createdImages.add(currentPhotoPath);
+
 				Multimedia multimedia = new Multimedia();
-				multimedia.setContent(Base64.getEncoder().encodeToString(mijnBytes));
+				multimedia.setContent(Base64.getEncoder().encodeToString(imagedata));
+				multimedia.setThumbnailContent(multimedia.getContent());
 				multimedia.setLocalFilePath(currentPhotoPath);
+
 				noteMultimedia.add(multimedia);
 				adapter.updateData(noteMultimedia);
-			} catch (Exception e) {
 
+			} catch (Exception e) {
+				Log.e("adas", e.getMessage());
 			}
 		}
 
@@ -281,6 +287,14 @@ public class NoteActivity extends AppCompatActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		//Verwijder foto's die zijn gemaakt
+//		for (String multimediaFile : createdImages) {
+//			try {
+//				Files.delete(Paths.get(multimediaFile));
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
 	}
 
 	private void updateAndReturnNote() {
@@ -288,9 +302,11 @@ public class NoteActivity extends AppCompatActivity {
 		//TODO constant
 		n.setTitle(nn(title.getText().toString(), "<Geen titel>"));
 		n.setNote_text(textView.getText().toString());
+		//Laten genereren
 		n.setGenerated_at(null);
+		//Ook laten genereren
 		n.setId(null);
-		if(noteMultimedia.size() >0) {
+		if (noteMultimedia.size() > 0) {
 			n.setMultimedia(noteMultimedia);
 		}
 
@@ -299,6 +315,7 @@ public class NoteActivity extends AppCompatActivity {
 
 		try {
 			note = om.writeValueAsString(n);
+			Log.e("bla",n.getMultimedia().size() + " multis");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -352,9 +369,6 @@ public class NoteActivity extends AppCompatActivity {
 				startActivityForResult(cameraIntent, CAMERA_REQUEST);
 			}
 		}
-
-
-//		startActivityForResult(cameraIntent, CAMERA_REQUEST);
 	}
 
 	private File createImageFile() throws IOException {
@@ -407,13 +421,10 @@ public class NoteActivity extends AppCompatActivity {
 
 	}
 
-		private void openNote(String noteUUID) {
+	private void openNote(String noteUUID) {
 
 		if (AccesTokenRequest.accesTokenRequest == null) {
-
-//			Toast.makeText(getBaseContext(), "Nog geen accesstoken. Moment geduld...", Toast.LENGTH_SHORT).show();
 			return;
-
 		}
 
 		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
@@ -453,12 +464,16 @@ public class NoteActivity extends AppCompatActivity {
 	}
 
 	private void handleFetchedNote(String note) {
-		setContentView(R.layout.activity_note);
+
 		initViews();
 		ObjectMapper om = new ObjectMapper();
 		try {
 			n = om.readValue(note, Note.class);
-			this.noteMultimedia = n.getMultimedia();
+			if(n.getMultimedia() !=null){
+				this.noteMultimedia = n.getMultimedia();
+			}else{
+				this.noteMultimedia = new ArrayList<Multimedia>();
+			}
 			adapter.updateData(noteMultimedia);
 		} catch (Exception e) {
 			Log.e("Err", "Error", e);

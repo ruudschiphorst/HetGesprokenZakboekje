@@ -16,6 +16,8 @@ public class Multimedia {
 	private Integer noteVersion;
 	private boolean isDeleted;
 	private String content;
+	private String thumbnailContent;
+
 	@JsonIgnore
 	private String localFilePath;
 
@@ -80,5 +82,13 @@ public class Multimedia {
 	@JsonIgnore
 	public void setLocalFilePath(String localFilePath) {
 		this.localFilePath = localFilePath;
+	}
+
+	public String getThumbnailContent() {
+		return thumbnailContent;
+	}
+
+	public void setThumbnailContent(String thumbnailContent) {
+		this.thumbnailContent = thumbnailContent;
 	}
 }

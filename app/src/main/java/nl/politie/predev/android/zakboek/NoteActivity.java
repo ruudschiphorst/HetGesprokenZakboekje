@@ -184,6 +184,9 @@ public class NoteActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		setContentView(R.layout.activity_loading);
+
+
 		if (getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) != null) {
 			openNote(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE));
 		} else {
@@ -320,9 +323,7 @@ public class NoteActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 		saveNote(note);
-		Intent returnIntent = new Intent();
-		setResult(Activity.RESULT_OK, returnIntent);
-		finish();
+
 	}
 
 	private void startVoiceRecorder() {
@@ -398,6 +399,7 @@ public class NoteActivity extends AppCompatActivity {
 				.post(body)
 				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
 				.build();
+		setContentView(R.layout.activity_saving);
 
 		client.newCall(request).enqueue(new Callback() {
 			@Override
@@ -411,7 +413,8 @@ public class NoteActivity extends AppCompatActivity {
 				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
 				Runnable runnable = new Runnable() {
 					@Override
-					public void run() {
+					public void run() {Intent returnIntent = new Intent();
+						setResult(Activity.RESULT_OK, returnIntent);
 						finish();
 					}
 				};

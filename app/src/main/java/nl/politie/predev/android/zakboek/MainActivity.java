@@ -65,7 +65,10 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_loading);
+	}
 
+	private void initViews() {
 		setContentView(R.layout.activity_main);
 
 		recyclerView = (RecyclerView) findViewById(R.id.activity__main_recycler);
@@ -94,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
 				startActivity(i);
 			}
 		});
-
 	}
 
 	private RecyclerViewClickListener getRecyclerViewClickListener() {
@@ -131,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == NOTE_ACTIVITY_RESULT) {
 			if (resultCode == Activity.RESULT_OK) {
+				setContentView(R.layout.activity_loading);
 				getNotesFromServer();
 			} else {
 
@@ -193,7 +196,9 @@ public class MainActivity extends AppCompatActivity {
 				Runnable runnable = new Runnable() {
 					@Override
 					public void run() {
+						initViews();
 						adapter.updateData(data);
+
 					}
 				};
 				mainHandler.post(runnable);

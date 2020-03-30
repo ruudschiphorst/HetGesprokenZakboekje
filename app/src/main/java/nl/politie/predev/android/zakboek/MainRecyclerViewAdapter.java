@@ -8,6 +8,8 @@ import android.util.Log;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.type.Color;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -58,10 +60,17 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
             public void onClick(View view) {
                 TextView tv = (TextView) view;
                 recyclerViewClickListener.onItemClicked(UUID.fromString(tv.getTag().toString()));
-                Log.i("bla",tv.getTag().toString());
             }
         });
-    }
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View view) {
+				TextView tv = (TextView) view;
+				recyclerViewClickListener.onItemLongClicked(UUID.fromString(tv.getTag().toString()), tv.getText().toString());
+				return true;
+			}
+		});
+	}
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override

@@ -65,6 +65,7 @@ public class NoteActivity extends AppCompatActivity {
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(String multimediaID);
+
 	}
 
 	private RecyclerViewClickListener getRecyclerViewClickListener() {

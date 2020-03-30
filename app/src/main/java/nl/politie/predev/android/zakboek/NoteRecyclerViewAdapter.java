@@ -68,11 +68,18 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
             @Override
             public void onClick(View view) {
                 ImageView iv = (ImageView) view;
-
                 recyclerViewClickListener.onItemClicked(iv.getTag().toString());
             }
         });
-    }
+
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View view) {
+				return false;
+			}
+		});
+
+	}
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override

@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -59,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(UUID uuid);
+		public void onItemLongClicked(UUID uuid, String title);
+
 	}
 
 
@@ -106,8 +110,28 @@ public class MainActivity extends AppCompatActivity {
 			public void onItemClicked(UUID uuid) {
 				openNoteActivity(uuid.toString());
 			}
+
+			@Override
+			public void onItemLongClicked(UUID uuid, String title) {
+				deleteNote(uuid, title);
+			}
 		};
+
 		return retval;
+	}
+
+	private void deleteNote(final UUID uuid, String title) {
+		new AlertDialog.Builder(this)
+				.setTitle("Notitie verwijderen")
+				.setMessage("Weet u zeker dat u de notitie " + title + " wilt verwijderen?")
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+					public void onClick(DialogInterface dialog, int whichButton) {
+						sendDeleteRequestToServer(uuid);
+//						Toast.makeText(MainActivity.this, uuid.toString(), Toast.LENGTH_SHORT).show();
+					}})
+				.setNegativeButton(android.R.string.no, null).show();
 	}
 
 	@Override
@@ -139,6 +163,53 @@ public class MainActivity extends AppCompatActivity {
 
 			}
 		}
+	}
+
+	private void sendDeleteRequestToServer(UUID uuid) {
+
+		setContentView(R.layout.activity_loading);
+
+		NoteIdentifier noteIdentifier = new NoteIdentifier();
+		noteIdentifier.setNoteID(uuid);
+
+		ObjectMapper om = new ObjectMapper();
+		String json = null;
+		try {
+			json = om.writeValueAsString(noteIdentifier);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		RequestBody body = RequestBody.create(
+				MediaType.parse("application/json"), json);
+
+		Request request = new Request.Builder()
+				.url(BASE_HTTPS_URL_DB_API + "deletenotebyid")
+				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.post(body)
+				.build();
+
+		OkHttpClient client =  new OkHttpClient();  //getUnsafeOkHttpClient();
+
+		client.newCall(request).enqueue(new Callback() {
+			@Override
+			public void onFailure(Call call, IOException e) {
+				Log.e("err", e.getMessage());
+			}
+
+			@Override
+			public void onResponse(Call call, Response response) throws IOException {
+				if (response.code() == 200) {
+
+				}else{
+					//TODO
+					Log.e("bla",response.body().string());
+				}
+				getNotesFromServer();
+			}
+		});
+
+
 	}
 
 	private void getNotesFromServer() {

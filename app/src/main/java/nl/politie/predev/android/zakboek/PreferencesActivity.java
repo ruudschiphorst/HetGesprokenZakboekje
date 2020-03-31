@@ -22,28 +22,38 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class CredentialsActivity extends AppCompatActivity {
+public class PreferencesActivity extends AppCompatActivity {
 
 	private EditText username;
 	private EditText password;
+	private EditText url_db;
+	private EditText url_auth;
 	private Button ok;
 	public static final String PREFS_ZAKBOEKJE = "gesproken_zakboekje_creds";
 	public static final String PREFS_USERNAME = "username";
 	public static final String PREFS_PASS = "passwd";
+	public static final String PREFS_URL_AUTH = "auth_url";
+	public static final String PREFS_URL_DB = "db_url";
+	public static final String DEFAULT_BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
+	public static final String DEFAULT_BASE_HTTPS_URL_AUTH_API = "https://stempolextras.westeurope.cloudapp.azure.com:8085/api/auth/generatetoken";
 	private SharedPreferences settings;
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.activity_set_user_pass);
+		setContentView(R.layout.activity_set_prefs);
 		username = findViewById(R.id.activity_creds_username);
 		password = findViewById(R.id.activity_creds_pw);
+		url_db = findViewById(R.id.activity_creds_db);
+		url_auth = findViewById(R.id.activity_creds_auth);
 		ok = findViewById(R.id.activity_creds_ok);
 
 		settings = getSharedPreferences(PREFS_ZAKBOEKJE, 0);
 		username.setText(settings.getString(PREFS_USERNAME, "ruud").toString());
 		password.setText(settings.getString(PREFS_PASS, "secret").toString());
+		url_db.setText(settings.getString(PREFS_URL_DB, DEFAULT_BASE_HTTPS_URL_DB_API));
+		url_auth.setText(settings.getString(PREFS_URL_AUTH, DEFAULT_BASE_HTTPS_URL_AUTH_API));
 
 		ok.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -58,6 +68,8 @@ public class CredentialsActivity extends AppCompatActivity {
 
 		final String enteredUsername = username.getText().toString();
 		final String enteredPassword = password.getText().toString();
+		final String enteredAuthURL = url_auth.getText().toString();
+		final String enteredDbURL = url_db.getText().toString();
 
 		String json = "{\"username\":\"" + enteredUsername + "\", \"password\":\"" + enteredPassword + "\"}";
 
@@ -65,7 +77,7 @@ public class CredentialsActivity extends AppCompatActivity {
 				MediaType.parse("application/json"), json);
 
 		Request request = new Request.Builder()
-				.url("https://stempolextras.westeurope.cloudapp.azure.com:8085/api/auth/generatetoken")
+				.url(enteredAuthURL)
 				.post(body)
 				.build();
 
@@ -74,7 +86,14 @@ public class CredentialsActivity extends AppCompatActivity {
 		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onFailure(Call call, IOException e) {
-				Log.e("err", e.getMessage());
+				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
+				Runnable runnable = new Runnable() {
+					@Override
+					public void run() {
+						wrongUsernamePasswordOrUrl();
+					}
+				};
+				mainHandler.post(runnable);
 			}
 
 			@Override
@@ -83,6 +102,8 @@ public class CredentialsActivity extends AppCompatActivity {
 					SharedPreferences.Editor editor = settings.edit();
 					editor.putString(PREFS_USERNAME, enteredUsername);
 					editor.putString(PREFS_PASS, enteredPassword);
+					editor.putString(PREFS_URL_AUTH, enteredAuthURL);
+					editor.putString(PREFS_URL_DB, enteredDbURL);
 					editor.commit();
 					finish();
 				}else{
@@ -90,7 +111,7 @@ public class CredentialsActivity extends AppCompatActivity {
 					Runnable runnable = new Runnable() {
 						@Override
 						public void run() {
-							wrongUsernamePassword();
+							wrongUsernamePasswordOrUrl();
 						}
 					};
 					mainHandler.post(runnable);
@@ -100,8 +121,8 @@ public class CredentialsActivity extends AppCompatActivity {
 		});
 	}
 
-	private void wrongUsernamePassword() {
-		Toast.makeText(this,"Verkeerde username en/of password. Probeer het opnieuw.",Toast.LENGTH_LONG).show();
+	private void wrongUsernamePasswordOrUrl() {
+		Toast.makeText(this,"Verkeerde username, password of URL. Probeer het opnieuw.",Toast.LENGTH_LONG).show();
 	}
 
 	@Override

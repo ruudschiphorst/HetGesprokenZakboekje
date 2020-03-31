@@ -66,8 +66,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 			@Override
 			public boolean onLongClick(View view) {
 				TextView tv = (TextView) view;
-				recyclerViewClickListener.onItemLongClicked(UUID.fromString(tv.getTag().toString()), tv.getText().toString());
-				return true;
+				 return recyclerViewClickListener.onItemLongClicked(UUID.fromString(tv.getTag().toString()), tv.getText().toString());
 			}
 		});
 	}

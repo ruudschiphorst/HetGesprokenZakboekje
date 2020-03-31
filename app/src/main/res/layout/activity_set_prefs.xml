@@ -35,6 +35,34 @@
 		android:visibility="visible"
 		tools:visibility="visible" />
 
+	<TextView
+		android:id="@+id/textView2"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Authenticatie URL" />
+
+	<EditText
+		android:id="@+id/activity_creds_auth"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:ems="10"
+		android:inputType="textUri"
+		android:text="Name" />
+
+	<TextView
+		android:id="@+id/textView3"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Database URL" />
+
+	<EditText
+		android:id="@+id/activity_creds_db"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:ems="10"
+		android:inputType="textUri"
+		android:text="Name" />
+
 	<Button
 		android:id="@+id/activity_creds_ok"
 		android:layout_width="match_parent"

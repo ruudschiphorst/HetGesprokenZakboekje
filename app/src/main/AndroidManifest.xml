@@ -25,7 +25,7 @@
         <activity android:name=".NoteActivity"
             android:parentActivityName=".MainActivity"/>
 		<service android:name=".InsecureStempolRpcSpeechService" />
-		<activity android:name=".CredentialsActivity" />
+		<activity android:name=".PreferencesActivity" />
 		<activity android:name=".PictureActivity" />
 
 		<provider

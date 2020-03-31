@@ -20,23 +20,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -51,17 +42,17 @@ public class MainActivity extends AppCompatActivity {
 	private RecyclerView recyclerView;
 	private MainRecyclerViewAdapter adapter;
 	private RecyclerView.LayoutManager layoutManager;
-//	private AccesTokenRequest atr;
 	List<Note> data = new ArrayList<Note>();
 	private ScheduledExecutorService tokenRefresher;
 	public static final String EXTRA_MESSAGE = "ZAKBOEKJE_NOTE";
 	public static final int NOTE_ACTIVITY_RESULT = 1;
-	private static final String BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
-
+	private boolean deleteMode = false;
+	private FloatingActionButton fabDeleteMode;
+	private SharedPreferences settings;
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(UUID uuid);
-		public void onItemLongClicked(UUID uuid, String title);
+		public boolean onItemLongClicked(UUID uuid, String title);
 
 	}
 
@@ -70,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_loading);
+		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 	}
 
 	private void initViews() {
@@ -97,8 +89,41 @@ public class MainActivity extends AppCompatActivity {
 		fabSettings.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				Intent i = new Intent(view.getContext(), CredentialsActivity.class);
+				Intent i = new Intent(view.getContext(), PreferencesActivity.class);
 				startActivity(i);
+			}
+		});
+
+		fabDeleteMode = findViewById(R.id.activity_main_deletemode);
+		if(deleteMode) {
+			fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_delete));
+		} else {
+			fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_menu_delete));
+		}
+		fabDeleteMode.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
+				deleteMode =! deleteMode;
+				if(deleteMode){
+					fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_delete));
+					Runnable runnable = new Runnable() {
+						@Override
+						public void run() {
+							Toast.makeText(getBaseContext(),"Delete modus AAN. Tik lang op een notitie om deze te verwijderen.",Toast.LENGTH_LONG).show();
+						}
+					};
+					mainHandler.post(runnable);
+				}else {
+					fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_menu_delete));
+					Runnable runnable = new Runnable() {
+						@Override
+						public void run() {
+							Toast.makeText(getBaseContext(),"Delete modus UIT.",Toast.LENGTH_LONG).show();
+						}
+					};
+					mainHandler.post(runnable);
+				}
 			}
 		});
 	}
@@ -112,8 +137,13 @@ public class MainActivity extends AppCompatActivity {
 			}
 
 			@Override
-			public void onItemLongClicked(UUID uuid, String title) {
-				deleteNote(uuid, title);
+			public boolean onItemLongClicked(UUID uuid, String title) {
+				if(deleteMode){
+					deleteNote(uuid, title);
+					return true;
+				}else {
+					return false;
+				}
 			}
 		};
 
@@ -121,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void deleteNote(final UUID uuid, String title) {
+
 		new AlertDialog.Builder(this)
 				.setTitle("Notitie verwijderen")
 				.setMessage("Weet u zeker dat u de notitie " + title + " wilt verwijderen?")
@@ -184,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
 				MediaType.parse("application/json"), json);
 
 		Request request = new Request.Builder()
-				.url(BASE_HTTPS_URL_DB_API + "deletenotebyid")
+				.url(settings.getString(PreferencesActivity.PREFS_URL_DB,PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "deletenotebyid")
 				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
 				.post(body)
 				.build();
@@ -244,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
 		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
 
 		Request request = new Request.Builder()
-				.url(BASE_HTTPS_URL_DB_API + "getall")
+				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "getall")
 				.get()
 				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
 				.build();
@@ -280,13 +311,12 @@ public class MainActivity extends AppCompatActivity {
 
 	private ScheduledExecutorService getTokenRefresher() {
 
-		SharedPreferences settings = getSharedPreferences(CredentialsActivity.PREFS_ZAKBOEKJE, 0);
-		String username = settings.getString(CredentialsActivity.PREFS_USERNAME, "").toString();
-		String password = settings.getString(CredentialsActivity.PREFS_PASS, "").toString();
+		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "").toString();
+		String password = settings.getString(PreferencesActivity.PREFS_PASS, "").toString();
 
 		//Geen username + pass = prompt gebruiker
 		if (username.equalsIgnoreCase("") || password.equalsIgnoreCase("")) {
-			Intent intent = new Intent(getApplicationContext(), CredentialsActivity.class);
+			Intent intent = new Intent(getApplicationContext(), PreferencesActivity.class);
 			startActivity(intent);
 		} else {
 
@@ -313,9 +343,9 @@ public class MainActivity extends AppCompatActivity {
 
 		Log.e("bla", "setting token...");
 
-		SharedPreferences settings = getSharedPreferences(CredentialsActivity.PREFS_ZAKBOEKJE, 0);
-		String username = settings.getString(CredentialsActivity.PREFS_USERNAME, "").toString();
-		String password = settings.getString(CredentialsActivity.PREFS_PASS, "").toString();
+		SharedPreferences settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
+		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "").toString();
+		String password = settings.getString(PreferencesActivity.PREFS_PASS, "").toString();
 
 		String json = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
 
@@ -323,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
 				MediaType.parse("application/json"), json);
 
 		Request request = new Request.Builder()
-				.url("https://stempolextras.westeurope.cloudapp.azure.com:8085/api/auth/generatetoken")
+				.url(settings.getString(PreferencesActivity.PREFS_URL_AUTH, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_AUTH_API))
 				.post(body)
 				.build();
 

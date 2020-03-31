@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -46,7 +47,7 @@ import okhttp3.Response;
 
 public class NoteActivity extends AppCompatActivity {
 
-	private static final String BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
+//	private static final String BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
 	public static final String EXTRA_MESSAGE_NOTE = "EXTRA_MESSAGE_NOTE";
 	private static final int CAMERA_REQUEST = 1888;
 	private boolean voiceInputActive = false;
@@ -60,6 +61,7 @@ public class NoteActivity extends AppCompatActivity {
 	private RecyclerView recyclerView;
 	private RecyclerView.LayoutManager layoutManager;
 	private List<String> createdImages = new ArrayList<String>();
+	private SharedPreferences settings;
 
 	private String currentPhotoPath;
 
@@ -186,7 +188,7 @@ public class NoteActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.activity_loading);
-
+		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 
 		if (getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) != null) {
 			openNote(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE));
@@ -396,7 +398,7 @@ public class NoteActivity extends AppCompatActivity {
 		RequestBody body = RequestBody.create(
 				MediaType.parse("application/json"), note);
 		Request request = new Request.Builder()
-				.url(BASE_HTTPS_URL_DB_API + "addnote")
+				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "addnote")
 				.post(body)
 				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
 				.build();
@@ -439,7 +441,7 @@ public class NoteActivity extends AppCompatActivity {
 				MediaType.parse("application/json"), json);
 
 		Request request = new Request.Builder()
-				.url(BASE_HTTPS_URL_DB_API + "getnote")
+				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "getnote")
 				.post(body)
 				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
 				.build();

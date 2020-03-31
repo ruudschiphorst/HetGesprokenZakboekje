@@ -294,13 +294,13 @@ public class NoteActivity extends AppCompatActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		//Verwijder foto's die zijn gemaakt
-//		for (String multimediaFile : createdImages) {
-//			try {
-//				Files.delete(Paths.get(multimediaFile));
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
+		for (String multimediaFile : createdImages) {
+			try {
+				Files.delete(Paths.get(multimediaFile));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private void updateAndReturnNote() {

@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(UUID uuid);
+
 		public boolean onItemLongClicked(UUID uuid, String title);
 
 	}
@@ -95,37 +96,42 @@ public class MainActivity extends AppCompatActivity {
 		});
 
 		fabDeleteMode = findViewById(R.id.activity_main_deletemode);
-		if(deleteMode) {
-			fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_delete));
-		} else {
-			fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_menu_delete));
-		}
+
+		setDeleteModeVisuals();
+
 		fabDeleteMode.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
-				deleteMode =! deleteMode;
-				if(deleteMode){
-					fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_delete));
+				deleteMode = !deleteMode;
+				setDeleteModeVisuals();
+				if (deleteMode) {
 					Runnable runnable = new Runnable() {
 						@Override
 						public void run() {
-							Toast.makeText(getBaseContext(),"Delete modus AAN. Tik lang op een notitie om deze te verwijderen.",Toast.LENGTH_LONG).show();
+							Toast.makeText(getBaseContext(), "Delete modus AAN. Tik lang op een notitie om deze te verwijderen.", Toast.LENGTH_LONG).show();
 						}
 					};
 					mainHandler.post(runnable);
-				}else {
-					fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_menu_delete));
+				} else {
 					Runnable runnable = new Runnable() {
 						@Override
 						public void run() {
-							Toast.makeText(getBaseContext(),"Delete modus UIT.",Toast.LENGTH_LONG).show();
+							Toast.makeText(getBaseContext(), "Delete modus UIT.", Toast.LENGTH_LONG).show();
 						}
 					};
 					mainHandler.post(runnable);
 				}
 			}
 		});
+	}
+
+	private void setDeleteModeVisuals() {
+		if (deleteMode) {
+			fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_delete));
+		} else {
+			fabDeleteMode.setImageDrawable(getDrawable(android.R.drawable.ic_menu_delete));
+		}
 	}
 
 	private RecyclerViewClickListener getRecyclerViewClickListener() {
@@ -138,10 +144,10 @@ public class MainActivity extends AppCompatActivity {
 
 			@Override
 			public boolean onItemLongClicked(UUID uuid, String title) {
-				if(deleteMode){
+				if (deleteMode) {
 					deleteNote(uuid, title);
 					return true;
-				}else {
+				} else {
 					return false;
 				}
 			}
@@ -161,7 +167,8 @@ public class MainActivity extends AppCompatActivity {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						sendDeleteRequestToServer(uuid);
 //						Toast.makeText(MainActivity.this, uuid.toString(), Toast.LENGTH_SHORT).show();
-					}})
+					}
+				})
 				.setNegativeButton(android.R.string.no, null).show();
 	}
 
@@ -215,12 +222,12 @@ public class MainActivity extends AppCompatActivity {
 				MediaType.parse("application/json"), json);
 
 		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB,PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "deletenotebyid")
+				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "deletenotebyid")
 				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
 				.post(body)
 				.build();
 
-		OkHttpClient client =  new OkHttpClient();  //getUnsafeOkHttpClient();
+		OkHttpClient client = new OkHttpClient();  //getUnsafeOkHttpClient();
 
 		client.newCall(request).enqueue(new Callback() {
 			@Override
@@ -232,9 +239,9 @@ public class MainActivity extends AppCompatActivity {
 			public void onResponse(Call call, Response response) throws IOException {
 				if (response.code() == 200) {
 
-				}else{
+				} else {
 					//TODO
-					Log.e("bla",response.body().string());
+					Log.e("bla", response.body().string());
 				}
 				getNotesFromServer();
 			}
@@ -251,14 +258,14 @@ public class MainActivity extends AppCompatActivity {
 		//Is er geen username en password, dan komt er automatisch een prompt
 		int tries = 0;
 
-		while(true){
+		while (true) {
 
-			if(AccesTokenRequest.accesTokenRequest == null) {
-				if(tries > 5) {
+			if (AccesTokenRequest.accesTokenRequest == null) {
+				if (tries > 5) {
 					//Meer dan 5 seconden gewacht -> geen nut. Stop maar met proberen en wacht tot onResume() opnieuw wordt aangeroepen,
 					//bijvoorbeeld omdat gebruiker het password scherm heeft bijgewerkt.
 					return;
-				}else{
+				} else {
 					tries++;
 					try {
 						Thread.sleep(1000);
@@ -266,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
 						e.printStackTrace();
 					}
 				}
-			}else{
+			} else {
 				//Er is inmiddels een token, ga maar uit de lus
 				break;
 			}
@@ -357,7 +364,7 @@ public class MainActivity extends AppCompatActivity {
 				.post(body)
 				.build();
 
-		OkHttpClient client =  new OkHttpClient();  //getUnsafeOkHttpClient();
+		OkHttpClient client = new OkHttpClient();  //getUnsafeOkHttpClient();
 
 		client.newCall(request).enqueue(new Callback() {
 			@Override
@@ -371,9 +378,9 @@ public class MainActivity extends AppCompatActivity {
 					String resp = response.body().string();
 					ObjectMapper om = new ObjectMapper();
 					AccesTokenRequest.accesTokenRequest = om.readValue(resp, AccesTokenRequest.class);
-				}else{
+				} else {
 					//TODO
-					Log.e("bla",response.body().string());
+					Log.e("bla", response.body().string());
 				}
 			}
 		});

@@ -5,7 +5,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -25,7 +24,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -47,9 +44,9 @@ import okhttp3.Response;
 
 public class NoteActivity extends AppCompatActivity {
 
-//	private static final String BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
 	public static final String EXTRA_MESSAGE_NOTE = "EXTRA_MESSAGE_NOTE";
 	private static final int CAMERA_REQUEST = 1888;
+	public static final int REPEAT_INTERVAL = 40;
 	private boolean voiceInputActive = false;
 	private Note n = null;
 	private TextView title = null;
@@ -62,8 +59,8 @@ public class NoteActivity extends AppCompatActivity {
 	private RecyclerView.LayoutManager layoutManager;
 	private List<String> createdImages = new ArrayList<String>();
 	private SharedPreferences settings;
-
 	private String currentPhotoPath;
+	private VisualizerView visualizerView;
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(String multimediaID);
@@ -99,6 +96,8 @@ public class NoteActivity extends AppCompatActivity {
 		public void onVoice(byte[] data, int size) {
 			if (speechService != null) {
 				speechService.recognize(data, size);
+				visualizerView.addAmplitude(getMaxAmplitude(data, size)); // update the VisualizeView
+				visualizerView.invalidate(); // refresh the VisualizerView
 			}
 		}
 
@@ -110,6 +109,23 @@ public class NoteActivity extends AppCompatActivity {
 		}
 
 	};
+
+	private int getMaxAmplitude(byte[] data, int size) {
+
+		int maxHeard=0;
+
+		for (int i = 0; i < size - 1; i += 2) {
+			// The buffer has LINEAR16 in little endian.
+			int s = data[i + 1];
+			if (s < 0) s *= -1;
+			s <<= 8;
+			s += Math.abs(data[i]);
+			if (s > maxHeard) {
+				maxHeard = s;
+			}
+		}
+		return maxHeard;
+	}
 
 	private final ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -251,6 +267,8 @@ public class NoteActivity extends AppCompatActivity {
 		adapter = new NoteRecyclerViewAdapter(noteMultimedia, getRecyclerViewClickListener());
 		recyclerView.setAdapter(adapter);
 
+		visualizerView = findViewById(R.id.visualizer);
+
 	}
 
 	@Override
@@ -344,6 +362,7 @@ public class NoteActivity extends AppCompatActivity {
 		}
 	}
 
+	//NotNull
 	private String nn(Object value, String valueIfNull) {
 
 		if (value != null) {
@@ -489,4 +508,22 @@ public class NoteActivity extends AppCompatActivity {
 		title.setText(n.getTitle());
 		textView.setText(n.getNote_text());
 	}
+
+//	// updates the visualizer every 50 milliseconds
+//	Runnable updateVisualizer = new Runnable() {
+//		@Override
+//		public void run() {
+//			if (isRecording) // if we are already recording
+//			{
+//				// get the current amplitude
+//
+//				int x = voiceRecorder.getMaxAmplitude();
+//				visualizerView.addAmplitude(x); // update the VisualizeView
+//				visualizerView.invalidate(); // refresh the VisualizerView
+//
+//				// update in 40 milliseconds
+//				handler.postDelayed(this, REPEAT_INTERVAL);
+//			}
+//		}
+//	};
 }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_note_constraint"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/activity_note_constraint"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
 
 	<EditText
 		android:id="@+id/note_tv_title"
@@ -23,8 +23,8 @@
 		android:textStyle="bold"
 		app:layout_constraintEnd_toStartOf="@+id/note_btn_save"
 		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintWidth_default="spread"
-		app:layout_constraintTop_toTopOf="parent" />
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintWidth_default="spread" />
 
 	<EditText
 		android:id="@+id/note_tv_text"
@@ -37,39 +37,38 @@
 		android:paddingTop="10dp"
 		android:paddingRight="10dp"
 		android:paddingBottom="10dp"
-		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintBottom_toBottomOf="@id/note_fab_camera"
 		app:layout_constraintEnd_toStartOf="@id/note_recycler_view"
 		app:layout_constraintHorizontal_weight="0.6"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@+id/note_tv_title"
 		app:layout_constraintVertical_weight="1" />
 
-    <ImageButton
-        android:id="@+id/note_btn_save"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:srcCompat="@android:drawable/ic_menu_save"
-        app:layout_constraintRight_toLeftOf="@id/note_btn_mic"
-        app:layout_constraintTop_toTopOf="parent" />
+	<ImageButton
+		android:id="@+id/note_btn_save"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		app:layout_constraintRight_toLeftOf="@id/note_btn_mic"
+		app:layout_constraintTop_toTopOf="parent"
+		app:srcCompat="@android:drawable/ic_menu_save" />
 
-    <ImageButton
-        android:id="@+id/note_btn_mic"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:srcCompat="@android:drawable/presence_audio_online"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+	<ImageButton
+		android:id="@+id/note_btn_mic"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:srcCompat="@android:drawable/presence_audio_online" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/note_fab_camera"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:clickable="true"
 		android:backgroundTint="@color/very_transparent"
-		app:srcCompat="@android:drawable/ic_menu_camera"
-		app:layout_constraintBottom_toBottomOf="parent"
-		app:layout_constraintEnd_toEndOf="parent"/>
+		android:clickable="true"
+		app:layout_constraintBottom_toTopOf="@id/visualizer"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:srcCompat="@android:drawable/ic_menu_camera" />
 
 	<androidx.recyclerview.widget.RecyclerView
 		android:id="@+id/note_recycler_view"
@@ -77,11 +76,19 @@
 		android:layout_height="0dp"
 		android:layout_marginBottom="8dp"
 		app:layout_constraintBottom_toBottomOf="@+id/note_tv_text"
+		app:layout_constraintBottom_toTopOf="@id/note_fab_camera"
+		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintHorizontal_weight="0.4"
 		app:layout_constraintLeft_toRightOf="@id/note_tv_text"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintTop_toBottomOf="@+id/note_tv_title"
-		app:layout_constraintBottom_toTopOf="@id/note_fab_camera"/>
+		app:layout_constraintTop_toBottomOf="@id/note_tv_title" />
 
+	<nl.politie.predev.android.zakboek.VisualizerView
+		android:id="@+id/visualizer"
+		android:layout_width="match_parent"
+		android:layout_height="60dp"
+		android:layout_centerHorizontal="true"
+		android:layout_margin="5dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintStart_toStartOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

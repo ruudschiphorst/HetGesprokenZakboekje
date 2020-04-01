@@ -19,7 +19,6 @@ package nl.politie.predev.android.zakboek;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.util.Log;
 
 
 /**
@@ -40,6 +39,7 @@ public class VoiceRecorder {
     private static final int AMPLITUDE_THRESHOLD = 1500;
     private static final int SPEECH_TIMEOUT_MILLIS = 300000;
     private static final int MAX_SPEECH_LENGTH_MILLIS = 30 * 10000;
+
 
     public static abstract class Callback {
 
@@ -103,6 +103,7 @@ public class VoiceRecorder {
         // Start processing the captured audio.
         mThread = new Thread(new ProcessVoice());
         mThread.start();
+
     }
 
     /**
@@ -227,5 +228,13 @@ public class VoiceRecorder {
         }
 
     }
+
+    public int getAudioSessionId() {
+    	if(mAudioRecord != null) {
+    		return mAudioRecord.getAudioSessionId();
+		}else{
+    		return -9999;
+		}
+	}
 
 }

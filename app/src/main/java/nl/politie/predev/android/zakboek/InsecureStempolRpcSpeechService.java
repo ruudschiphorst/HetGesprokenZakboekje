@@ -83,7 +83,6 @@ public class InsecureStempolRpcSpeechService extends Service {
 
         @Override
         public void onError(Throwable t) {
-            t.printStackTrace();
             Log.e(TAG, "Error calling the API. " + t.getMessage(), t);
         }
 

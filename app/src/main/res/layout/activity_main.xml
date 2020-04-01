@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_main_constraint"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="nl.politie.predev.android.zakboek.MainActivity">
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/activity_main_constraint"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	tools:context="nl.politie.predev.android.zakboek.MainActivity">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/activity__main_recycler"
-        android:scrollbars="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="visible"
-        tools:visibility="visible" />
+	<androidx.recyclerview.widget.RecyclerView
+		android:id="@+id/activity__main_recycler"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:scrollbars="vertical"
+		android:visibility="visible"
+		tools:visibility="visible"
+		app:layout_constraintBottom_toTopOf="@+id/activity_main_deletemode"/>
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/activity_main_add"
@@ -30,7 +30,6 @@
 		android:id="@+id/activity_main_password"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginEnd="8dp"
 		android:backgroundTint="@color/very_transparent"
 		android:src="@android:drawable/ic_menu_preferences"
 		app:borderWidth="0dp"

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string-array name="authorizations">
+		<item>Handhaving standaard (8.1.11)</item>
+		<item>Handhaving slachtofferverklaring (8.3.11)</item>
+	</string-array>
+</resources>

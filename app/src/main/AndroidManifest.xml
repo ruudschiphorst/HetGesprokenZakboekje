@@ -23,10 +23,14 @@
             </intent-filter>
         </activity>
         <activity android:name=".NoteActivity"
-            android:parentActivityName=".MainActivity"/>
+            android:parentActivityName=".MainActivity"
+			android:launchMode="singleTop"/>
 		<service android:name=".InsecureStempolRpcSpeechService" />
 		<activity android:name=".PreferencesActivity" />
-		<activity android:name=".PictureActivity" />
+		<activity android:name=".PictureActivity"
+			android:parentActivityName=".NoteActivity"/>
+		<activity android:name=".NoteDetailsActivity"
+			android:parentActivityName=".NoteActivity"/>
 
 		<provider
 			android:name="androidx.core.content.FileProvider"

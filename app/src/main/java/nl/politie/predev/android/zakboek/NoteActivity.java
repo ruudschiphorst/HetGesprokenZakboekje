@@ -47,8 +47,9 @@ import okhttp3.Response;
 public class NoteActivity extends AppCompatActivity {
 
 	public static final String EXTRA_MESSAGE_NOTE = "EXTRA_MESSAGE_NOTE";
+	public static final String EXTRA_MESSAGE_NOTE_DETAILS = "EXTRA_MESSAGE_NOTE_DETAILS";
 	private static final int CAMERA_REQUEST = 1888;
-	public static final int REPEAT_INTERVAL = 40;
+	private static final int NOTE_DETAILS_REQUEST = 1241;
 	private boolean voiceInputActive = false;
 	private Note n = null;
 	private TextView title = null;
@@ -288,6 +289,38 @@ public class NoteActivity extends AppCompatActivity {
 		visualizerView = findViewById(R.id.visualizer);
 		visualizerView.setBarColor(getColor(R.color.colorPrimary));
 		visualizerView.setVisibility(View.GONE);
+
+		FloatingActionButton fabNoteDetails = findViewById(R.id.note_fab_details);
+		fabNoteDetails.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				openNoteDetails();
+
+			}
+		});
+
+	}
+
+	private void openNoteDetails() {
+
+		Note noteToPass = new Note();
+		noteToPass.setOwner(n.getOwner());
+		noteToPass.setCreated_by(n.getCreated_by());
+		noteToPass.setGenerated_at(n.getGenerated_at());
+		noteToPass.setGrondslag(n.getGrondslag());
+		noteToPass.setAutorisatieniveau(n.getAutorisatieniveau());
+		noteToPass.setAfhandelcode(n.getAfhandelcode());
+		ObjectMapper om = new ObjectMapper();
+		String noteToPassAsString ="";
+		try {
+			noteToPassAsString = om.writeValueAsString(noteToPass);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		Intent intent = new Intent(this, NoteDetailsActivity.class);
+		intent.putExtra(EXTRA_MESSAGE_NOTE_DETAILS, noteToPassAsString);
+		startActivityForResult(intent, NOTE_DETAILS_REQUEST);
 	}
 
 	@Override
@@ -307,11 +340,27 @@ public class NoteActivity extends AppCompatActivity {
 
 				noteMultimedia.add(multimedia);
 				adapter.updateData(noteMultimedia);
-
+				return;
 			} catch (Exception e) {
 				Log.e("Error", e.getMessage());
 			}
 		}
+
+		if(requestCode == NOTE_DETAILS_REQUEST && resultCode == Activity.RESULT_OK) {
+			ObjectMapper om = new ObjectMapper();
+			String returnedNoteAsString = data.getStringExtra("result");
+			try {
+				Note returnedNote = om.readValue(returnedNoteAsString, Note.class);
+				n.setIs_public(returnedNote.isIs_public());
+				n.setGrondslag(returnedNote.getGrondslag());
+				n.setAutorisatieniveau(returnedNote.getAutorisatieniveau());
+				n.setAfhandelcode(returnedNote.getAfhandelcode());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+
 
 	}
 

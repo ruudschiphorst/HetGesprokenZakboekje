@@ -70,6 +70,16 @@
 		app:layout_constraintEnd_toEndOf="parent"
 		app:srcCompat="@android:drawable/ic_menu_camera" />
 
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/note_fab_details"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:backgroundTint="@color/very_transparent"
+		android:clickable="true"
+		app:layout_constraintBottom_toTopOf="@id/visualizer"
+		app:layout_constraintEnd_toStartOf="@id/note_fab_camera"
+		app:srcCompat="@android:drawable/ic_menu_preferences" />
+
 	<androidx.recyclerview.widget.RecyclerView
 		android:id="@+id/note_recycler_view"
 		android:layout_width="wrap_content"

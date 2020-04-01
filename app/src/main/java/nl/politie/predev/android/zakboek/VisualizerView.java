@@ -23,10 +23,11 @@ public class VisualizerView extends View {
 	public VisualizerView(Context context, AttributeSet attrs) {
 		super(context, attrs); // call superclass constructor
 		linePaint = new Paint(); // create Paint for lines
-		linePaint.setColor(Color.GREEN); // set color to green
+		linePaint.setColor(Color.GREEN); // set default color to green
 		linePaint.setStrokeWidth(LINE_WIDTH); // set stroke width
 	}
 
+	//Adjust color to custom one
 	public void setBarColor(int color) {
 		linePaint.setColor(color);
 	}

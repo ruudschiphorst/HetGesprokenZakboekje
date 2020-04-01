@@ -93,11 +93,16 @@ public class NoteActivity extends AppCompatActivity {
 		}
 
 		@Override
-		public void onVoice(byte[] data, int size) {
+		public void onVoice(final byte[] data, final int size) {
 			if (speechService != null) {
 				speechService.recognize(data, size);
-				visualizerView.addAmplitude(getMaxAmplitude(data, size)); // update the VisualizeView
-				visualizerView.invalidate(); // refresh the VisualizerView
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						visualizerView.addAmplitude(getMaxAmplitude(data, size)); // update the VisualizeView
+						visualizerView.invalidate(); // refresh the VisualizerView
+					}
+				});
 			}
 		}
 
@@ -112,7 +117,7 @@ public class NoteActivity extends AppCompatActivity {
 
 	private int getMaxAmplitude(byte[] data, int size) {
 
-		int maxHeard=0;
+		int maxHeard = 0;
 
 		for (int i = 0; i < size - 1; i += 2) {
 			// The buffer has LINEAR16 in little endian.
@@ -268,6 +273,7 @@ public class NoteActivity extends AppCompatActivity {
 		recyclerView.setAdapter(adapter);
 
 		visualizerView = findViewById(R.id.visualizer);
+		visualizerView.setBarColor(getColor(R.color.colorPrimary));
 
 	}
 
@@ -339,7 +345,7 @@ public class NoteActivity extends AppCompatActivity {
 
 		try {
 			note = om.writeValueAsString(n);
-			Log.e("bla",n.getMultimedia().size() + " multis");
+			Log.e("bla", n.getMultimedia().size() + " multis");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -435,7 +441,8 @@ public class NoteActivity extends AppCompatActivity {
 				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
 				Runnable runnable = new Runnable() {
 					@Override
-					public void run() {Intent returnIntent = new Intent();
+					public void run() {
+						Intent returnIntent = new Intent();
 						setResult(Activity.RESULT_OK, returnIntent);
 						finish();
 					}
@@ -494,9 +501,9 @@ public class NoteActivity extends AppCompatActivity {
 		ObjectMapper om = new ObjectMapper();
 		try {
 			n = om.readValue(note, Note.class);
-			if(n.getMultimedia() !=null){
+			if (n.getMultimedia() != null) {
 				this.noteMultimedia = n.getMultimedia();
-			}else{
+			} else {
 				this.noteMultimedia = new ArrayList<Multimedia>();
 			}
 			adapter.updateData(noteMultimedia);

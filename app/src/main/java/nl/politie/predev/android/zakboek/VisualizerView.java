@@ -27,6 +27,10 @@ public class VisualizerView extends View {
 		linePaint.setStrokeWidth(LINE_WIDTH); // set stroke width
 	}
 
+	public void setBarColor(int color) {
+		linePaint.setColor(color);
+	}
+
 	// called when the dimensions of the View change
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {

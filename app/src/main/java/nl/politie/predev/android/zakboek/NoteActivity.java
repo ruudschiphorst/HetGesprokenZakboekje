@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -286,7 +287,7 @@ public class NoteActivity extends AppCompatActivity {
 
 		visualizerView = findViewById(R.id.visualizer);
 		visualizerView.setBarColor(getColor(R.color.colorPrimary));
-
+		visualizerView.setVisibility(View.GONE);
 	}
 
 	@Override
@@ -368,6 +369,7 @@ public class NoteActivity extends AppCompatActivity {
 		if (voiceRecorder != null) {
 			voiceRecorder.stop();
 		}
+		visualizerView.setVisibility(View.VISIBLE);
 		voiceRecorder = new VoiceRecorder(voiceCallback);
 		voiceRecorder.start();
 	}
@@ -377,6 +379,7 @@ public class NoteActivity extends AppCompatActivity {
 			voiceRecorder.stop();
 			voiceRecorder = null;
 		}
+		visualizerView.setVisibility(View.GONE);
 	}
 
 	//NotNull
@@ -470,9 +473,17 @@ public class NoteActivity extends AppCompatActivity {
 			return;
 		}
 
-		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
+		OkHttpClient client = new OkHttpClient();
+		NoteIdentifier noteIdentifier = new NoteIdentifier();
+		noteIdentifier.setNoteID(UUID.fromString(noteUUID));
+		ObjectMapper om = new ObjectMapper();
+		String json = "";
 
-		String json = "{\"noteID\": \"" + noteUUID + "\", \"version\": null}";
+		try {
+			json = om.writeValueAsString(noteIdentifier);
+		} catch (IOException e) {
+			Log.e("Error", e.getMessage());
+		}
 
 		RequestBody body = RequestBody.create(
 				MediaType.parse("application/json"), json);
@@ -527,21 +538,4 @@ public class NoteActivity extends AppCompatActivity {
 		textView.setText(n.getNote_text());
 	}
 
-//	// updates the visualizer every 50 milliseconds
-//	Runnable updateVisualizer = new Runnable() {
-//		@Override
-//		public void run() {
-//			if (isRecording) // if we are already recording
-//			{
-//				// get the current amplitude
-//
-//				int x = voiceRecorder.getMaxAmplitude();
-//				visualizerView.addAmplitude(x); // update the VisualizeView
-//				visualizerView.invalidate(); // refresh the VisualizerView
-//
-//				// update in 40 milliseconds
-//				handler.postDelayed(this, REPEAT_INTERVAL);
-//			}
-//		}
-//	};
 }

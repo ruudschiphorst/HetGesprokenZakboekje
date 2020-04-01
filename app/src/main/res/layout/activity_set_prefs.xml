@@ -9,7 +9,7 @@
 		android:id="@+id/activity_creds_uname_hint"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text='Username ("ruud"):' />
+		android:text="@string/username_with_default" />
 
 	<EditText
 		android:id="@+id/activity_creds_username"
@@ -17,7 +17,6 @@
 		android:layout_height="wrap_content"
 		android:ems="10"
 		android:inputType="textPersonName"
-		android:text="Username"
 		android:visibility="visible"
 		tools:visibility="visible" />
 
@@ -25,7 +24,7 @@
 		android:id="@+id/activity_creds_pw_hint"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text='Password ("secret"):' />
+		android:text="@string/password_with_default" />
 
 	<EditText
 		android:id="@+id/activity_creds_pw"
@@ -40,29 +39,27 @@
 		android:id="@+id/textView2"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="Authenticatie URL" />
+		android:text="@string/authentication_url" />
 
 	<EditText
 		android:id="@+id/activity_creds_auth"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:ems="10"
-		android:inputType="textUri"
-		android:text="Name" />
+		android:inputType="textUri" />
 
 	<TextView
 		android:id="@+id/textView3"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="Database URL" />
+		android:text="@string/db_url" />
 
 	<EditText
 		android:id="@+id/activity_creds_db"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:ems="10"
-		android:inputType="textUri"
-		android:text="Name" />
+		android:inputType="textUri" />
 
 	<Button
 		android:id="@+id/activity_creds_ok"

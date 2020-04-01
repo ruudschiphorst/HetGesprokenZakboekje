@@ -9,6 +9,6 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:gravity="center|center_horizontal|center_vertical"
-		android:text="Bezig met opslaan..."
+		android:text="@string/saving_in_progress"
 		android:textSize="24sp" />
 </LinearLayout>

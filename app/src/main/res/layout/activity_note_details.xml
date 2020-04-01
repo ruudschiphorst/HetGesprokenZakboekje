@@ -14,7 +14,7 @@
 		android:layout_width="match_parent"
 		android:layout_height="18dp"
 		android:layout_marginStart="8dp"
-		android:text="Publieke notitie"
+		android:text="@string/is_public_note"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@+id/textView11" />
 
@@ -23,7 +23,7 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_marginStart="8dp"
-		android:text="Eigenaar"
+		android:text="@string/owner"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@+id/activity_note_details_private" />
 
@@ -44,7 +44,7 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_marginStart="8dp"
-		android:text="Aangemaakt door"
+		android:text="@string/created_by"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
@@ -65,7 +65,7 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_marginStart="8dp"
-		android:text="Aangemaakt op"
+		android:text="@string/created_at"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@+id/textView6" />
 
@@ -87,7 +87,7 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_marginStart="8dp"
-		android:text="Autorisaties"
+		android:text="@string/authorizations"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@+id/textview101" />
 
@@ -108,7 +108,7 @@
 		android:layout_height="50dp"
 		android:layout_marginStart="8dp"
 		android:layout_marginTop="8dp"
-		android:text="Notitie details"
+		android:text="@string/note_details"
 		android:textSize="24sp"
 		android:textStyle="bold"
 		app:layout_constraintStart_toStartOf="parent"

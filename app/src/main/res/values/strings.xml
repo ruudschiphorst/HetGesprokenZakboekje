@@ -1,4 +1,16 @@
 <resources>
     <string name="app_name">Het Gesproken Zakboekje</string>
-    <string name="title_activity_note">NoteActivity</string>
+	<string name="loading_in_progress">Bezig met laden...</string>
+	<string name="note_details">Details van notitie</string>
+	<string name="is_public_note">Openbare notitie</string>
+	<string name="owner">Eigenaar</string>
+	<string name="created_by">Aangemaakt door</string>
+	<string name="created_at">Aangemaakt op</string>
+	<string name="authorizations">Autorisaties</string>
+	<string name="saving_in_progress">Bezig met opslaan...</string>
+	<string name="username_with_default">Gebruikersnaam (\"ruud\")</string>
+	<string name="password_with_default">Wachtwoord (\"secret\")</string>
+	<string name="authentication_url">URL autorisaties</string>
+	<string name="db_url">URL database</string>
+
 </resources>

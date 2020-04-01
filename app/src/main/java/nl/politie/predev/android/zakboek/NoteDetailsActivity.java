@@ -21,15 +21,17 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
+
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_note_details);
+
+		//Spinner populeren
 		Spinner spinner = findViewById(R.id.activity_note_details_spinner);
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
 				R.array.authorizations, android.R.layout.simple_spinner_item);
 
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
-
 
 		if (getIntent().getStringExtra(NoteActivity.EXTRA_MESSAGE_NOTE_DETAILS) != null) {
 			Note n = null;
@@ -39,20 +41,23 @@ public class NoteDetailsActivity extends AppCompatActivity {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			//TODO niet volledig
+			//TODO niet volledige hardcoded meuk
 			if(n.getAutorisatieniveau() == 3) {
 				spinner.setSelection(1);
 			}else {
 				spinner.setSelection(0);
 			}
+
 			TextView createdBy = findViewById(R.id.activity_note_details_created_by);
 			TextView createdAt = findViewById(R.id.activity_note_details_created_at);
 			TextView owner = findViewById(R.id.activity_note_details_owner);
 			Switch isPrivate = findViewById(R.id.activity_note_details_private);
+
 			createdBy.setText(n.getCreated_by());
 			createdAt.setText(n.getGenerated_at().toString());
 			owner.setText(n.getOwner());
 			isPrivate.setChecked(n.isIs_public());
+
 		}
 
 		ImageButton ibSave = findViewById(R.id.activity_note_details_ib_save);
@@ -77,6 +82,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
 		int spinnerPosition = spinner.getSelectedItemPosition();
 
+		//TODO hard coded meuk
 		switch (spinnerPosition){
 			case 0:
 				n.setGrondslag(8.0);

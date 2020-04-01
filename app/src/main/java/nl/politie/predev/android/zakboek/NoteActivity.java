@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
@@ -196,6 +197,17 @@ public class NoteActivity extends AppCompatActivity {
 				public void onSpeechEnd() {
 
 				}
+
+				@Override
+				public void onError(final String message){
+					runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							Toast.makeText(getBaseContext(),message,Toast.LENGTH_LONG).show();
+						}
+					});
+				}
+
 			};
 
 	@Override
@@ -296,7 +308,7 @@ public class NoteActivity extends AppCompatActivity {
 				adapter.updateData(noteMultimedia);
 
 			} catch (Exception e) {
-				Log.e("adas", e.getMessage());
+				Log.e("Error", e.getMessage());
 			}
 		}
 
@@ -345,7 +357,6 @@ public class NoteActivity extends AppCompatActivity {
 
 		try {
 			note = om.writeValueAsString(n);
-			Log.e("bla", n.getMultimedia().size() + " multis");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -44,17 +44,17 @@ public class PictureActivity extends AppCompatActivity {
 
 	private void getImageContent(String multimediaID) {
 
-		Log.e("sdad", multimediaID);
-
-		//Base64 content bevat geen slash
-		if(multimediaID.contains("/")) {
+		//Base64 content bevat geen padverwijzing naar android
+		if(multimediaID.contains("Android")) {
 			try{
 				setImage(Files.readAllBytes(Paths.get(multimediaID)));
+				return;
 			}catch (Exception e){
 				//TODO
 			}
-			return;
 		}
+
+		//Niet uit local storage kunnen halen, dus we halen hem op vanaf de server
 
 		OkHttpClient client = new OkHttpClient();
 

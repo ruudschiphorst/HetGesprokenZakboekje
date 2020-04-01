@@ -123,6 +123,9 @@ public class InsecureStempolRpcSpeechService extends Service {
 
         @Override
         public void onError(Throwable t) {
+			for (InsecureRpcSpeechServiceListener listener : listeners) {
+				listener.onError("Fout bij aanroepen STeMPol: " + t.getMessage());
+			}
             Log.e(TAG, "Error calling the API.", t);
         }
 
@@ -332,6 +335,8 @@ public class InsecureStempolRpcSpeechService extends Service {
 		void onSpeechRecognized(String text, boolean isFinal, boolean fromUpload);
 		//Er wordt geen spraak meer gehoord
 		void onSpeechEnd();
+		//Er wordt een error gegooid
+		void onError(String message);
 	}
 
 }

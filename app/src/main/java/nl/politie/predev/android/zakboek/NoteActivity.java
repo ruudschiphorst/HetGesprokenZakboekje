@@ -303,6 +303,9 @@ public class NoteActivity extends AppCompatActivity {
 
 	private void openNoteDetails() {
 
+		//Maak een kleine kopie van de huidige note met alleen dat wat we nodig hebben
+		//Reden: ik wil geen enorm object met mogelijk vele MB's aan foto's over de lijn knallen.
+		//Tevens: Android zelf vindt dat ook niet leuk
 		Note noteToPass = new Note();
 		noteToPass.setOwner(n.getOwner());
 		noteToPass.setCreated_by(n.getCreated_by());
@@ -318,6 +321,7 @@ public class NoteActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 
+		//"mini notitie" als string naar details passen
 		Intent intent = new Intent(this, NoteDetailsActivity.class);
 		intent.putExtra(EXTRA_MESSAGE_NOTE_DETAILS, noteToPassAsString);
 		startActivityForResult(intent, NOTE_DETAILS_REQUEST);
@@ -329,7 +333,8 @@ public class NoteActivity extends AppCompatActivity {
 		if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
 			try {
-
+				//Full res foto's worden altijd door Android weggeschreven als file, daar kun je niet omheen: anders krijg je alleen de thumbnail
+				//Ik wil het als byte[] hebben, zodat ik het als base64 string in de JSON kan zetten
 				byte[] imagedata = Files.readAllBytes(Paths.get(currentPhotoPath));
 				createdImages.add(currentPhotoPath);
 
@@ -350,6 +355,7 @@ public class NoteActivity extends AppCompatActivity {
 			ObjectMapper om = new ObjectMapper();
 			String returnedNoteAsString = data.getStringExtra("result");
 			try {
+				//Waarden uit detail scherm overnemen
 				Note returnedNote = om.readValue(returnedNoteAsString, Note.class);
 				n.setIs_public(returnedNote.isIs_public());
 				n.setGrondslag(returnedNote.getGrondslag());
@@ -481,7 +487,7 @@ public class NoteActivity extends AppCompatActivity {
 
 	private void saveNote(String note) {
 
-		OkHttpClient client = new OkHttpClient();//getUnsafeOkHttpClient();
+		OkHttpClient client = new OkHttpClient();
 
 		RequestBody body = RequestBody.create(
 				MediaType.parse("application/json"), note);

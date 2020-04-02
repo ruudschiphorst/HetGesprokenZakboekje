@@ -1,10 +1,12 @@
 package nl.politie.predev.android.zakboek;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -13,6 +15,8 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -49,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
 	private boolean deleteMode = false;
 	private FloatingActionButton fabDeleteMode;
 	private SharedPreferences settings;
+	private static final int REQUEST_CODE = 200;
+
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(UUID uuid);
@@ -62,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_loading);
+		requestPermissionsIfNotGranted();
+
 		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 	}
 
@@ -385,4 +393,14 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 	}
+
+	private void requestPermissionsIfNotGranted() {
+
+		if ((ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) ||
+				ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE);
+		}
+	}
+
+
 }

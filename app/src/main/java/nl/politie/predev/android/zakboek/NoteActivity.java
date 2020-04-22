@@ -11,7 +11,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
-import android.util.Log;
+//import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -313,6 +313,8 @@ public class NoteActivity extends AppCompatActivity {
 		noteToPass.setGrondslag(n.getGrondslag());
 		noteToPass.setAutorisatieniveau(n.getAutorisatieniveau());
 		noteToPass.setAfhandelcode(n.getAfhandelcode());
+		noteToPass.setIs_public(n.isIs_public());
+
 		ObjectMapper om = new ObjectMapper();
 		String noteToPassAsString ="";
 		try {
@@ -347,7 +349,7 @@ public class NoteActivity extends AppCompatActivity {
 				adapter.updateData(noteMultimedia);
 				return;
 			} catch (Exception e) {
-				Log.e("Error", e.getMessage());
+//				Log.e("Error", e.getMessage());
 			}
 		}
 
@@ -501,7 +503,7 @@ public class NoteActivity extends AppCompatActivity {
 		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onFailure(Call call, IOException e) {
-				Log.e("err", e.getMessage());
+//				Log.e("err", e.getMessage());
 			}
 
 			@Override
@@ -537,7 +539,7 @@ public class NoteActivity extends AppCompatActivity {
 		try {
 			json = om.writeValueAsString(noteIdentifier);
 		} catch (IOException e) {
-			Log.e("Error", e.getMessage());
+//			Log.e("Error", e.getMessage());
 		}
 
 		RequestBody body = RequestBody.create(
@@ -552,7 +554,7 @@ public class NoteActivity extends AppCompatActivity {
 		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onFailure(Call call, IOException e) {
-				Log.e("err", e.getMessage());
+//				Log.e("err", e.getMessage());
 			}
 
 			@Override
@@ -585,7 +587,7 @@ public class NoteActivity extends AppCompatActivity {
 			}
 			adapter.updateData(noteMultimedia);
 		} catch (Exception e) {
-			Log.e("Err", "Error", e);
+//			Log.e("Err", "Error", e);
 			finish();
 		}
 

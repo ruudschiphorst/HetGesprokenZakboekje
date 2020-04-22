@@ -9,8 +9,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -54,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
 	private FloatingActionButton fabDeleteMode;
 	private SharedPreferences settings;
 	private static final int REQUEST_CODE = 200;
-
+	private int selectedFilter=0;
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(UUID uuid);
@@ -130,6 +132,25 @@ public class MainActivity extends AppCompatActivity {
 					};
 					mainHandler.post(runnable);
 				}
+			}
+		});
+
+		Spinner spinner = findViewById(R.id.activity_main_filters_spinner);
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+				R.array.filters, android.R.layout.simple_spinner_item);
+
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner.setAdapter(adapter);
+
+		spinner.setSelection(selectedFilter);
+		ImageButton ib = findViewById(R.id.activity_main_search);
+		ib.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Spinner spinner = findViewById(R.id.activity_main_filters_spinner);
+				selectedFilter = spinner.getSelectedItemPosition();
+				setContentView(R.layout.activity_loading);
+				getNotesFromServer();
 			}
 		});
 	}
@@ -240,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
 		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onFailure(Call call, IOException e) {
-				Log.e("err", e.getMessage());
+//				Log.e("err", e.getMessage());
 			}
 
 			@Override
@@ -249,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
 
 				} else {
 					//TODO
-					Log.e("bla", response.body().string());
+//					Log.e("bla", response.body().string());
 				}
 				getNotesFromServer();
 			}
@@ -289,8 +310,30 @@ public class MainActivity extends AppCompatActivity {
 
 		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
 
+		String endpoint;
+
+		//TODO hard coded meuk
+		switch (selectedFilter){
+			case 0:
+				endpoint = "getall";
+				break;
+			case 1:
+				endpoint = "getmynotes";
+				break;
+			case 2:
+				endpoint = "getpublicnotes";
+				break;
+			case 3:
+				endpoint = "getmypublicnotes";
+				break;
+			default:
+				endpoint = "getall";
+				break;
+		}
+
+
 		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "getall")
+				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + endpoint)
 				.get()
 				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
 				.build();
@@ -298,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
 		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onFailure(Call call, IOException e) {
-				Log.e("err", e.getMessage());
+//				Log.e("err", e.getMessage());
 			}
 
 			@Override
@@ -356,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void setToken() {
 
-		Log.e("bla", "setting token...");
+//		Log.e("bla", "setting token...");
 
 		SharedPreferences settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "").toString();
@@ -377,7 +420,7 @@ public class MainActivity extends AppCompatActivity {
 		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onFailure(Call call, IOException e) {
-				Log.e("err", e.getMessage());
+//				Log.e("err", e.getMessage());
 			}
 
 			@Override
@@ -388,7 +431,7 @@ public class MainActivity extends AppCompatActivity {
 					AccesTokenRequest.accesTokenRequest = om.readValue(resp, AccesTokenRequest.class);
 				} else {
 					//TODO
-					Log.e("bla", response.body().string());
+//					Log.e("bla", response.body().string());
 				}
 			}
 		});

@@ -9,7 +9,7 @@
 		android:id="@+id/activity_creds_uname_hint"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="@string/username_with_default" />
+		android:text="@string/username" />
 
 	<EditText
 		android:id="@+id/activity_creds_username"
@@ -24,7 +24,7 @@
 		android:id="@+id/activity_creds_pw_hint"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="@string/password_with_default" />
+		android:text="@string/password" />
 
 	<EditText
 		android:id="@+id/activity_creds_pw"

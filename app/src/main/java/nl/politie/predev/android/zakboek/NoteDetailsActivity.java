@@ -33,6 +33,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
 
+		spinner.setVisibility(View.GONE);
+
 		if (getIntent().getStringExtra(NoteActivity.EXTRA_MESSAGE_NOTE_DETAILS) != null) {
 			Note n = null;
 			ObjectMapper om = new ObjectMapper();
@@ -54,7 +56,11 @@ public class NoteDetailsActivity extends AppCompatActivity {
 			Switch isPrivate = findViewById(R.id.activity_note_details_private);
 
 			createdBy.setText(n.getCreated_by());
-			createdAt.setText(n.getGenerated_at().toString());
+			if(n.getGenerated_at() !=null){
+				createdAt.setText(n.getGenerated_at().toString());
+			} else {
+				createdAt.setText("(Nieuw)");
+			}
 			owner.setText(n.getOwner());
 			isPrivate.setChecked(n.isIs_public());
 

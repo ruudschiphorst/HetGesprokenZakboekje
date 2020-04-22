@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+//import android.util.Log;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
@@ -72,7 +72,7 @@ public class PictureActivity extends AppCompatActivity {
 		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onFailure(Call call, IOException e) {
-				Log.e("err", e.getMessage());
+//				Log.e("err", e.getMessage());
 			}
 
 			@Override
@@ -98,14 +98,14 @@ public class PictureActivity extends AppCompatActivity {
 	}
 
 	private void setImage(String multimedia){
-		Log.e("dada", multimedia);
+//		Log.e("dada", multimedia);
 		try{
 			ObjectMapper om = new ObjectMapper();
 			Multimedia multimediaObject = om.readValue(multimedia, Multimedia.class);
 			byte[] imageData = Base64.getDecoder().decode(multimediaObject.getContent());
 			setImage(imageData);
 		} catch (Exception e) {
-			Log.e("asfasf", e.getMessage());
+//			Log.e("asfasf", e.getMessage());
 		}
 	}
 }

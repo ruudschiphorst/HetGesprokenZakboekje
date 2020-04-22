@@ -3,6 +3,7 @@
     <color name="colorPrimary">#00427f</color>
     <color name="colorPrimaryDark">#00427f</color>
     <color name="colorAccent">#D81B60</color>
+	<color name="politie_rood">#ff3318</color>
 
     <color name="orange">#ff6600</color>
     <!-- orange -->

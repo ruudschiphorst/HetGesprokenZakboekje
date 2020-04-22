@@ -3,7 +3,6 @@ package nl.politie.predev.android.zakboek;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -50,8 +49,8 @@ public class PreferencesActivity extends AppCompatActivity {
 		ok = findViewById(R.id.activity_creds_ok);
 
 		settings = getSharedPreferences(PREFS_ZAKBOEKJE, 0);
-		username.setText(settings.getString(PREFS_USERNAME, "ruud").toString());
-		password.setText(settings.getString(PREFS_PASS, "secret").toString());
+		username.setText(settings.getString(PREFS_USERNAME, "").toString());
+		password.setText(settings.getString(PREFS_PASS, "").toString());
 		url_db.setText(settings.getString(PREFS_URL_DB, DEFAULT_BASE_HTTPS_URL_DB_API));
 		url_auth.setText(settings.getString(PREFS_URL_AUTH, DEFAULT_BASE_HTTPS_URL_AUTH_API));
 

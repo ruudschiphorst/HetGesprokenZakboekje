@@ -6,7 +6,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.text.TextUtils;
-import android.util.Log;
+//import android.util.Log;
 
 import com.google.cloud.speech.v1.RecognitionAudio;
 import com.google.cloud.speech.v1.RecognitionConfig;
@@ -57,7 +57,7 @@ public class InsecureStempolRpcSpeechService extends Service {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.i(TAG, "onNext started.");
+//                    Log.i(TAG, "onNext started.");
 
                     String text = null;
                     boolean isFinal = false;
@@ -74,7 +74,7 @@ public class InsecureStempolRpcSpeechService extends Service {
 
                         listener.onSpeechRecognized(text, isFinal, false);
                     }
-                    Log.d(TAG, "onNext completed.");
+//                    Log.d(TAG, "onNext completed.");
                 }
             });
             thread.start();
@@ -83,12 +83,12 @@ public class InsecureStempolRpcSpeechService extends Service {
 
         @Override
         public void onError(Throwable t) {
-            Log.e(TAG, "Error calling the API. " + t.getMessage(), t);
+//            Log.e(TAG, "Error calling the API. " + t.getMessage(), t);
         }
 
         @Override
         public void onCompleted() {
-            Log.d(TAG, "API completed.");
+//            Log.d(TAG, "API completed.");
             for (InsecureRpcSpeechServiceListener listener : listeners) {
                 listener.onSpeechEnd();
             }
@@ -126,12 +126,12 @@ public class InsecureStempolRpcSpeechService extends Service {
 			for (InsecureRpcSpeechServiceListener listener : listeners) {
 				listener.onError("Fout bij aanroepen STeMPol: " + t.getMessage());
 			}
-            Log.e(TAG, "Error calling the API.", t);
+//            Log.e(TAG, "Error calling the API.", t);
         }
 
         @Override
         public void onCompleted() {
-            Log.d(TAG, "API completed.");
+//            Log.d(TAG, "API completed.");
         }
 
     };
@@ -167,7 +167,7 @@ public class InsecureStempolRpcSpeechService extends Service {
                 try {
                     channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
-                    Log.e(TAG, "Error shutting down the gRPC channel.", e);
+//                    Log.e(TAG, "Error shutting down the gRPC channel.", e);
                 }
             }
             api = null;
@@ -222,7 +222,7 @@ public class InsecureStempolRpcSpeechService extends Service {
      * @param sampleRate The sample rate of the audio.
      */
     public void startRecognizing(int sampleRate) {
-        Log.d(TAG, "StartRecog");
+//        Log.d(TAG, "StartRecog");
 
         if(internetFailed) {
             return;
@@ -233,7 +233,7 @@ public class InsecureStempolRpcSpeechService extends Service {
         }
 
         if (api == null) {
-            Log.w(TAG, "API not ready. Ignoring the request.");
+//            Log.w(TAG, "API not ready. Ignoring the request.");
             return;
         }
         // Configure the API
@@ -311,7 +311,7 @@ public class InsecureStempolRpcSpeechService extends Service {
                             .build(),
                     fileResponseObserver);
         } catch (IOException e) {
-            Log.e(TAG, "Error loading the input", e);
+//            Log.e(TAG, "Error loading the input", e);
         }
     }
 

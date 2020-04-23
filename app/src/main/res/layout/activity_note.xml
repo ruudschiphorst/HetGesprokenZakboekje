@@ -72,7 +72,8 @@
 		android:clickable="true"
 		app:layout_constraintBottom_toTopOf="@id/visualizer"
 		app:layout_constraintEnd_toEndOf="parent"
-		app:srcCompat="@android:drawable/ic_menu_camera" />
+		app:srcCompat="@android:drawable/ic_menu_camera"
+		app:borderWidth="0dp"/>
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/note_fab_details"
@@ -82,7 +83,8 @@
 		android:clickable="true"
 		app:layout_constraintBottom_toTopOf="@id/visualizer"
 		app:layout_constraintEnd_toStartOf="@id/note_fab_camera"
-		app:srcCompat="@android:drawable/ic_menu_preferences" />
+		app:srcCompat="@android:drawable/ic_menu_preferences"
+		app:borderWidth="0dp"/>
 
 	<androidx.recyclerview.widget.RecyclerView
 		android:id="@+id/note_recycler_view"

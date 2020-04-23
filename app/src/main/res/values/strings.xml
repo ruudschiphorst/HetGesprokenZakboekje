@@ -13,5 +13,6 @@
 	<string name="authentication_url">URL autorisaties</string>
 	<string name="db_url">URL database</string>
 	<string name="show_notes">Toon notities</string>
-
+	<string name="yes">Ja</string>
+	<string name="no">Nee</string>
 </resources>

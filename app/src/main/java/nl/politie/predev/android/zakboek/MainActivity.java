@@ -3,6 +3,7 @@ package nl.politie.predev.android.zakboek;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.Spinner;
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void initViews() {
+
 		setContentView(R.layout.activity_main);
 
 		recyclerView = (RecyclerView) findViewById(R.id.activity__main_recycler);
@@ -143,7 +146,24 @@ public class MainActivity extends AppCompatActivity {
 		spinner.setAdapter(adapter);
 
 		spinner.setSelection(selectedFilter);
-		ImageButton ib = findViewById(R.id.activity_main_search);
+
+		spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+											  @Override
+											  public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+											  		if(i != selectedFilter){
+											  			selectedFilter = i;
+														getNotesFromServer();
+													}
+
+											  }
+
+											  @Override
+											  public void onNothingSelected(AdapterView<?> adapterView) {
+
+											  }
+										  });
+
+				ImageButton ib = findViewById(R.id.activity_main_search);
 		ib.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -153,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
 				getNotesFromServer();
 			}
 		});
+
 	}
 
 	private void setDeleteModeVisuals() {
@@ -290,9 +311,17 @@ public class MainActivity extends AppCompatActivity {
 		while (true) {
 
 			if (AccesTokenRequest.accesTokenRequest == null) {
-				if (tries > 5) {
-					//Meer dan 5 seconden gewacht -> geen nut. Stop maar met proberen en wacht tot onResume() opnieuw wordt aangeroepen,
+				if (tries > 10) {
+					//Meer dan 10 seconden gewacht -> geen nut. Stop maar met proberen en wacht tot onResume() opnieuw wordt aangeroepen,
 					//bijvoorbeeld omdat gebruiker het password scherm heeft bijgewerkt.
+					final Context context = getBaseContext();
+					runOnUiThread(new Runnable() {
+									  @Override
+									  public void run() {
+										  Toast.makeText(context, "Er is een probleem bij het inloggen. Probeer het later nogmaals.", Toast.LENGTH_LONG);
+									  }
+								  });
+
 					return;
 				} else {
 					tries++;
@@ -315,10 +344,10 @@ public class MainActivity extends AppCompatActivity {
 		//TODO hard coded meuk
 		switch (selectedFilter){
 			case 0:
-				endpoint = "getall";
+				endpoint = "getmynotes";
 				break;
 			case 1:
-				endpoint = "getmynotes";
+				endpoint = "getall";
 				break;
 			case 2:
 				endpoint = "getpublicnotes";

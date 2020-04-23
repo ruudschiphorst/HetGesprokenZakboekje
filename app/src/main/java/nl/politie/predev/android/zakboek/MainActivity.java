@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(UUID uuid);
 
-		public boolean onItemLongClicked(UUID uuid, String title);
+		public boolean onItemLongClicked(UUID uuid, String title, Integer version);
 
 	}
 
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 
 			@Override
-			public boolean onItemLongClicked(UUID uuid, String title) {
+			public boolean onItemLongClicked(UUID uuid, String title, Integer version) {
 				if (deleteMode) {
 					deleteNote(uuid, title);
 					return true;
@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
 
 		new AlertDialog.Builder(this)
 				.setTitle("Notitie verwijderen")
-				.setMessage("Weet u zeker dat u de notitie " + title + " wilt verwijderen?")
+				.setMessage("Weet u zeker dat u de notitie \"" + title + "\" wilt verwijderen?")
 				.setIcon(android.R.drawable.ic_dialog_alert)
 				.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 

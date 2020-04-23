@@ -48,7 +48,6 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 		// - get element from your dataset at this position
 		// - replace the contents of the view with that element
 		holder.title.setText(data.get(position).getTitle());
-//		holder.title.setTag(data.get(position).getNoteID());
 		holder.owner_text.setText(data.get(position).getOwner());
 		holder.created_by.setText(data.get(position).getCreated_by());
 		holder.created_at.setText(data.get(position).getGenerated_at().toString());
@@ -59,17 +58,19 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 			holder.is_public.setText(R.string.no);
 		}
 
-		holder.itemView.setTag(data.get(position).getNoteID());
+		holder.itemView.setTag(data.get(position).getNoteID() + ";" + data.get(position).getVersion());
+
 		holder.itemView.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				recyclerViewClickListener.onItemClicked(UUID.fromString(view.getTag().toString()));
+				recyclerViewClickListener.onItemClicked(UUID.fromString(view.getTag().toString().split(";")[0]));
 			}
 		});
 		holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View view) {
-				return recyclerViewClickListener.onItemLongClicked(UUID.fromString(view.getTag().toString()), holder.title.getText().toString());
+				String[] tagParts = view.getTag().toString().split(";");
+				return recyclerViewClickListener.onItemLongClicked(UUID.fromString(tagParts[0]), holder.title.getText().toString(), Integer.valueOf(tagParts[1]));
 			}
 		});
 	}

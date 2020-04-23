@@ -37,7 +37,7 @@
 		android:paddingTop="10dp"
 		android:paddingRight="10dp"
 		android:paddingBottom="10dp"
-		app:layout_constraintBottom_toBottomOf="@id/note_fab_camera"
+		app:layout_constraintBottom_toTopOf="@id/note_fab_camera"
 		app:layout_constraintEnd_toStartOf="@id/note_recycler_view"
 		app:layout_constraintHorizontal_weight="0.6"
 		app:layout_constraintStart_toStartOf="parent"

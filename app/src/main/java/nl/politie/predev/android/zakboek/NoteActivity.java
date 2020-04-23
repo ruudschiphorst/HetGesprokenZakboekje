@@ -307,6 +307,8 @@ public class NoteActivity extends AppCompatActivity {
 		//Reden: ik wil geen enorm object met mogelijk vele MB's aan foto's over de lijn knallen.
 		//Tevens: Android zelf vindt dat ook niet leuk
 		Note noteToPass = new Note();
+		noteToPass.setNoteID(n.getNoteID());
+		noteToPass.setVersion(n.getVersion());
 		noteToPass.setOwner(n.getOwner());
 		noteToPass.setCreated_by(n.getCreated_by());
 		noteToPass.setGenerated_at(n.getGenerated_at());
@@ -363,6 +365,10 @@ public class NoteActivity extends AppCompatActivity {
 				n.setGrondslag(returnedNote.getGrondslag());
 				n.setAutorisatieniveau(returnedNote.getAutorisatieniveau());
 				n.setAfhandelcode(returnedNote.getAfhandelcode());
+				if(returnedNote.getNote_text() != null && !returnedNote.getNote_text().equals("")){
+					n.setNote_text(returnedNote.getNote_text());
+					textView.setText(returnedNote.getNote_text());
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

@@ -21,10 +21,23 @@
 		android:paddingBottom="10dp"
 		android:textSize="24sp"
 		android:textStyle="bold"
-		app:layout_constraintEnd_toStartOf="@+id/note_btn_save"
+		app:layout_constraintEnd_toStartOf="@+id/note_btn_mic"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toTopOf="parent"
-		app:layout_constraintWidth_default="spread" />
+		 />
+
+	<ImageButton
+		android:id="@+id/note_btn_mic"
+		android:layout_width="50dp"
+		android:layout_height="50dp"
+		android:background="@color/very_transparent"
+		android:backgroundTint="@color/very_transparent"
+		android:foregroundGravity="center"
+		android:scaleType="centerInside"
+		app:layout_constraintBottom_toBottomOf="@id/note_tv_title"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintTop_toTopOf="@id/note_tv_title"
+		app:srcCompat="@android:drawable/presence_audio_online" />
 
 	<EditText
 		android:id="@+id/note_tv_text"
@@ -38,31 +51,23 @@
 		android:paddingRight="10dp"
 		android:paddingBottom="10dp"
 		app:layout_constraintBottom_toTopOf="@id/note_fab_camera"
-		app:layout_constraintEnd_toStartOf="@id/note_recycler_view"
+		app:layout_constraintEnd_toEndOf="@id/note_tv_title"
 		app:layout_constraintHorizontal_weight="0.6"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@+id/note_tv_title"
 		app:layout_constraintVertical_weight="1" />
 
-	<ImageButton
-		android:id="@+id/note_btn_save"
-		android:layout_width="35dp"
-		android:layout_height="35dp"
-		android:background="@color/very_transparent"
-		android:backgroundTint="@color/very_transparent"
-		app:layout_constraintRight_toLeftOf="@id/note_btn_mic"
-		app:layout_constraintTop_toTopOf="parent"
-		app:srcCompat="@android:drawable/ic_menu_save" />
-
-	<ImageButton
-		android:id="@+id/note_btn_mic"
-		android:layout_width="35dp"
-		android:layout_height="35dp"
-		android:background="@color/very_transparent"
-		android:backgroundTint="@color/very_transparent"
+	<androidx.recyclerview.widget.RecyclerView
+		android:id="@+id/note_recycler_view"
+		android:layout_width="75dp"
+		android:layout_height="0dp"
+		android:layout_marginBottom="8dp"
+		app:layout_constraintBottom_toBottomOf="@+id/note_tv_text"
+		app:layout_constraintBottom_toTopOf="@id/note_fab_camera"
 		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintTop_toTopOf="parent"
-		app:srcCompat="@android:drawable/presence_audio_online" />
+		app:layout_constraintHorizontal_weight="0.4"
+		app:layout_constraintStart_toEndOf="@id/note_tv_title"
+		app:layout_constraintTop_toBottomOf="@id/note_tv_title" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/note_fab_camera"
@@ -86,17 +91,7 @@
 		app:srcCompat="@android:drawable/ic_menu_preferences"
 		app:borderWidth="0dp"/>
 
-	<androidx.recyclerview.widget.RecyclerView
-		android:id="@+id/note_recycler_view"
-		android:layout_width="wrap_content"
-		android:layout_height="0dp"
-		android:layout_marginBottom="8dp"
-		app:layout_constraintBottom_toBottomOf="@+id/note_tv_text"
-		app:layout_constraintBottom_toTopOf="@id/note_fab_camera"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintHorizontal_weight="0.4"
-		app:layout_constraintLeft_toRightOf="@id/note_tv_text"
-		app:layout_constraintTop_toBottomOf="@id/note_tv_title" />
+
 
 	<nl.politie.predev.android.zakboek.VisualizerView
 		android:id="@+id/visualizer"
@@ -104,7 +99,19 @@
 		android:layout_height="60dp"
 		android:layout_centerHorizontal="true"
 		android:layout_margin="5dp"
-		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintBottom_toTopOf="@id/note_tv_nonfinal_text"
 		app:layout_constraintStart_toStartOf="parent"/>
+
+	<TextView
+		android:id="@+id/note_tv_nonfinal_text"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:gravity="center"
+		android:paddingStart="5dp"
+		android:paddingEnd="5dp"
+		android:paddingBottom="5dp"
+		android:textSize="16sp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

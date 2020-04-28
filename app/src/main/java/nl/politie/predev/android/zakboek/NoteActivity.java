@@ -11,12 +11,16 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
-//import android.util.Log;
+
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -54,6 +58,7 @@ public class NoteActivity extends AppCompatActivity {
 	private Note n = null;
 	private TextView title = null;
 	private TextView textView = null;
+	private TextView nonFinalText =null;
 	private InsecureStempolRpcSpeechService speechService;
 	private VoiceRecorder voiceRecorder;
 	private List<Multimedia> noteMultimedia;// = new ArrayList<Multimedia>();
@@ -64,6 +69,7 @@ public class NoteActivity extends AppCompatActivity {
 	private SharedPreferences settings;
 	private String currentPhotoPath;
 	private VisualizerView visualizerView;
+	private boolean dirty;
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(String multimediaID);
@@ -169,27 +175,48 @@ public class NoteActivity extends AppCompatActivity {
 
 				@Override
 				public void onSpeechRecognized(String text, boolean isFinal, boolean fromUpload) {
+
+					//Unk kan overal in de tekst voorkomen. Haal dit er uit.
+					text = text.replace("<unk>", "").trim();
+
+					//Er worden automatisch spaties en punten geplot. Dit klopt niet altijd, zeker als er <unk>s in het resultaat zitten.
+					//Sloop de "verkeerde" spaties er uit
+					while (text.contains(" .")) {
+						text = text.replace(" .", ".");
+					}
+					while(text.contains("  ")) {
+						text = text.replace("  ", " ");
+					}
+					//Zorg er wel voor dat we niet de hele string kwijt zijn. Dan hoeft ie niets te doen.
+					//Het kan voorkomen dat na trimmen en alle <unk>'s er uit halen, er alleen een punt overblijft. Dat willen we ook niet, dus <= 1
+					if (text.length() <= 1) {
+						return;
+					}
+
+					final String preparedText = text;
+
 					if (isFinal) {
 
-						//Unk kan overal in de tekst voorkomen. Haal dit er uit.
-						text = text.replace("<unk>", "").trim();
-
-						//Er worden automatisch spaties en punten geplot. Dit klopt niet altijd, zeker als er <unk>s in het resultaat zitten.
-						//Sloop de "verkeerde" spaties er uit
-						while (text.contains(" .")) {
-							text = text.replace(" .", ".");
-						}
-						//Zorg er wel voor dat we niet de hele string kwijt zijn. Dan hoeft ie niets te doen.
-						//Het kan voorkomen dat na trimmen en alle <unk>'s er uit halen, er alleen een punt overblijft. Dat willen we ook niet, dus <= 1
-						if (text.length() <= 1) {
-							return;
-						}
-
-						final String preparedText = text;
 						runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
-								textView.setText(textView.getText().toString() + " " + preparedText);
+								String plottedText;
+								String existingText = textView.getText().toString();
+								if(existingText.endsWith(" ")) {
+									plottedText = existingText + preparedText + " ";
+								} else {
+									plottedText = existingText + " " + preparedText + " ";
+								}
+								textView.setText(plottedText);
+								nonFinalText.setText("");
+							}
+						});
+					}else{
+						//Tussenresultaten
+						runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								nonFinalText.setText(preparedText);
 							}
 						});
 					}
@@ -234,7 +261,6 @@ public class NoteActivity extends AppCompatActivity {
 			n.setMultimedia(new ArrayList<Multimedia>());
 			title.setText("Nieuwe notitie");
 		}
-
 	}
 
 	private void initViews() {
@@ -243,14 +269,15 @@ public class NoteActivity extends AppCompatActivity {
 
 		title = findViewById(R.id.note_tv_title);
 		textView = findViewById(R.id.note_tv_text);
+		nonFinalText = findViewById(R.id.note_tv_nonfinal_text);
 
-		ImageButton ib = findViewById(R.id.note_btn_save);
-		ib.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				updateAndReturnNote();
-			}
-		});
+//		ImageButton ib = findViewById(R.id.note_btn_save);
+//		ib.setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View view) {
+//				updateAndReturnNote();
+//			}
+//		});
 
 		final ImageButton ibMic = findViewById(R.id.note_btn_mic);
 
@@ -290,12 +317,30 @@ public class NoteActivity extends AppCompatActivity {
 		visualizerView.setBarColor(getColor(R.color.colorPrimary));
 		visualizerView.setVisibility(View.GONE);
 
+		nonFinalText.setVisibility(View.GONE);
+
 		FloatingActionButton fabNoteDetails = findViewById(R.id.note_fab_details);
 		fabNoteDetails.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				openNoteDetails();
+			}
+		});
 
+		textView.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+			}
+
+			@Override
+			public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+			}
+
+			@Override
+			public void afterTextChanged(Editable editable) {
+				dirty = true;
 			}
 		});
 
@@ -306,6 +351,9 @@ public class NoteActivity extends AppCompatActivity {
 		//Maak een kleine kopie van de huidige note met alleen dat wat we nodig hebben
 		//Reden: ik wil geen enorm object met mogelijk vele MB's aan foto's over de lijn knallen.
 		//Tevens: Android zelf vindt dat ook niet leuk
+
+		dirty = true;
+
 		Note noteToPass = new Note();
 		noteToPass.setNoteID(n.getNoteID());
 		noteToPass.setVersion(n.getVersion());
@@ -391,6 +439,17 @@ public class NoteActivity extends AppCompatActivity {
 	}
 
 	@Override
+	public void onBackPressed() {
+		if(dirty) {
+			updateAndReturnNote();
+		}else{
+			finish();
+		}
+//		super.onBackPressed();
+	}
+
+
+	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		//Verwijder foto's die zijn gemaakt
@@ -433,6 +492,7 @@ public class NoteActivity extends AppCompatActivity {
 			voiceRecorder.stop();
 		}
 		visualizerView.setVisibility(View.VISIBLE);
+		nonFinalText.setVisibility(View.VISIBLE);
 		voiceRecorder = new VoiceRecorder(voiceCallback);
 		voiceRecorder.start();
 	}
@@ -443,6 +503,7 @@ public class NoteActivity extends AppCompatActivity {
 			voiceRecorder = null;
 		}
 		visualizerView.setVisibility(View.GONE);
+		nonFinalText.setVisibility(View.GONE);
 	}
 
 	//NotNull
@@ -468,6 +529,7 @@ public class NoteActivity extends AppCompatActivity {
 			}
 			// Continue only if the File was successfully created
 			if (photoFile != null) {
+				dirty = true;
 				Uri photoURI = FileProvider.getUriForFile(this,
 						"com.example.android.fileprovider",
 						photoFile);
@@ -580,6 +642,16 @@ public class NoteActivity extends AppCompatActivity {
 
 	}
 
+	@Override
+	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				onBackPressed();
+				return true;
+		}
+		return false;
+	}
+
 	private void handleFetchedNote(String note) {
 
 		initViews();
@@ -599,6 +671,7 @@ public class NoteActivity extends AppCompatActivity {
 
 		title.setText(n.getTitle());
 		textView.setText(n.getNote_text());
+		dirty =false;
 	}
 
 }

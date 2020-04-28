@@ -2,21 +2,20 @@ package nl.politie.predev.android.zakboek;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -103,7 +102,9 @@ public class NoteDetailsActivity extends AppCompatActivity {
 			}
 		});
 
-		recyclerView = (RecyclerView) findViewById(R.id.note_details_recycler);
+		ibSave.setVisibility(View.GONE);
+
+		recyclerView = findViewById(R.id.note_details_recycler);
 		recyclerView.setHasFixedSize(true);
 
 		layoutManager = new LinearLayoutManager(this);
@@ -211,6 +212,21 @@ public class NoteDetailsActivity extends AppCompatActivity {
 		okAndReturn();
 	}
 
+	@Override
+	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				onBackPressed();
+				return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void onBackPressed() {
+		okAndReturn();
+	}
+
 	private void okAndReturn() {
 
 		Switch switchButton = findViewById(R.id.activity_note_details_private);
@@ -289,7 +305,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
 			public void onResponse(Call call, Response response) throws IOException {
 				if (response.code() == 200) {
 					String resp = response.body().string();
-					Log.e("bla","resp " + resp);
+//					Log.e("bla","resp " + resp);
 					ObjectMapper om = new ObjectMapper();
 					data = Arrays.asList(om.readValue(resp, Note[].class));
 					Collections.sort(data);

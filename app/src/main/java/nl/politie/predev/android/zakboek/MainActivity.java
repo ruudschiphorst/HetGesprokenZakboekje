@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -61,9 +62,9 @@ public class MainActivity extends AppCompatActivity {
 	private int selectedFilter=0;
 
 	public interface RecyclerViewClickListener {
-		public void onItemClicked(UUID uuid);
+		void onItemClicked(UUID uuid);
 
-		public boolean onItemLongClicked(UUID uuid, String title, Integer version);
+		boolean onItemLongClicked(UUID uuid, String title, Integer version);
 
 	}
 
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
 
 		setContentView(R.layout.activity_main);
 
-		recyclerView = (RecyclerView) findViewById(R.id.activity__main_recycler);
+		recyclerView = findViewById(R.id.activity__main_recycler);
 		recyclerView.setHasFixedSize(true);
 
 		layoutManager = new LinearLayoutManager(this);
@@ -226,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onResume() {
 		super.onResume();
 
-		if (tokenRefresher == null || tokenRefresher.isShutdown()) {
+		if (tokenRefresher == null || tokenRefresher.isShutdown() || AccesTokenRequest.shouldRefresh()) {
 			tokenRefresher = getTokenRefresher();
 		}
 		getNotesFromServer();
@@ -398,8 +399,8 @@ public class MainActivity extends AppCompatActivity {
 
 	private ScheduledExecutorService getTokenRefresher() {
 
-		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "").toString();
-		String password = settings.getString(PreferencesActivity.PREFS_PASS, "").toString();
+		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "");
+		String password = settings.getString(PreferencesActivity.PREFS_PASS, "");
 
 		//Geen username + pass = prompt gebruiker
 		if (username.equalsIgnoreCase("") || password.equalsIgnoreCase("")) {
@@ -421,9 +422,17 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	@Override
+	protected void onStop() {
+		super.onStop();
+	}
+
+	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		tokenRefresher.shutdown();
+		tokenRefresher = null;
+		AccesTokenRequest.accesTokenRequest = null;
+		AccesTokenRequest.requested_at = null;
 	}
 
 	private void setToken() {
@@ -431,8 +440,8 @@ public class MainActivity extends AppCompatActivity {
 //		Log.e("bla", "setting token...");
 
 		SharedPreferences settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
-		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "").toString();
-		String password = settings.getString(PreferencesActivity.PREFS_PASS, "").toString();
+		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "");
+		String password = settings.getString(PreferencesActivity.PREFS_PASS, "");
 
 		String json = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
 
@@ -458,6 +467,7 @@ public class MainActivity extends AppCompatActivity {
 					String resp = response.body().string();
 					ObjectMapper om = new ObjectMapper();
 					AccesTokenRequest.accesTokenRequest = om.readValue(resp, AccesTokenRequest.class);
+					AccesTokenRequest.requested_at = new Date();
 				} else {
 					//TODO
 //					Log.e("bla", response.body().string());

@@ -14,7 +14,7 @@ public class Note implements Comparable<Note> {
     private String owner;
     private String created_by;
     private Timestamp generated_at;
-    private boolean is_public=true;
+    private boolean is_public=false;
     private boolean is_deleted=false;
     private double grondslag = 8.0;
     private Integer autorisatieniveau = 1;

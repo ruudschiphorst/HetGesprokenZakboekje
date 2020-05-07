@@ -1,23 +1,15 @@
 package nl.politie.predev.android.zakboek;
 
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.widget.Toast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
-import java.util.UUID;
 
 import nl.politie.predev.android.zakboek.model.AccesTokenRequest;
-import nl.politie.predev.android.zakboek.model.Note;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -28,8 +20,9 @@ import okhttp3.Response;
 
 public class HttpRequestHelper {
 
-	private SharedPreferences settings;
-	private Context context;
+	private static SharedPreferences settings;
+	private static final String APPLICATION_JSON = "application/json";
+
 
 	public interface HttpRequestFinishedListener {
 		void onResponse(Call call, Response response);
@@ -38,9 +31,8 @@ public class HttpRequestHelper {
 	}
 
 
-	public HttpRequestHelper(SharedPreferences settings, Context context){
+	public HttpRequestHelper(SharedPreferences settings){
 		this.settings = settings;
-		this.context = context;
 	}
 
 
@@ -49,11 +41,11 @@ public class HttpRequestHelper {
 		OkHttpClient client = new OkHttpClient();
 
 		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), noteAsJson);
+				MediaType.parse(APPLICATION_JSON), noteAsJson);
 		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "addnote")
+				.url(ServerUrls.dbUrl + "addnote")
 				.post(body)
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.addHeader(AuthHeader.key, AuthHeader.value)
 				.build();
 
 		client.newCall(request).enqueue(new Callback() {
@@ -63,7 +55,7 @@ public class HttpRequestHelper {
 			}
 
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response) {
 				listener.onResponse(call, response);
 			}
 		});
@@ -74,12 +66,12 @@ public class HttpRequestHelper {
 		OkHttpClient client = new OkHttpClient();
 
 		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), noteIdentifierAsString);
+				MediaType.parse(APPLICATION_JSON), noteIdentifierAsString);
 
 		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "getnote")
+				.url(ServerUrls.dbUrl + "getnote")
 				.post(body)
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.addHeader(AuthHeader.key, AuthHeader.value)
 				.build();
 
 		client.newCall(request).enqueue(new Callback() {
@@ -89,7 +81,7 @@ public class HttpRequestHelper {
 			}
 
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response) {
 				listener.onResponse(call, response);
 			}
 		});
@@ -97,11 +89,11 @@ public class HttpRequestHelper {
 
 	public void deleteNote(String noteIdentifierAsString, final HttpRequestFinishedListener listener){
 		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), noteIdentifierAsString);
+				MediaType.parse(APPLICATION_JSON), noteIdentifierAsString);
 
 		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "deletenotebyid")
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.url(ServerUrls.dbUrl + "deletenotebyid")
+				.addHeader(AuthHeader.key, AuthHeader.value)
 				.post(body)
 				.build();
 
@@ -114,7 +106,7 @@ public class HttpRequestHelper {
 			}
 
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response)  {
 				listener.onResponse(call, response);
 			}
 		});
@@ -123,11 +115,11 @@ public class HttpRequestHelper {
 	public void getAllVersionsOfNote(String noteIdentifierAsString, final HttpRequestFinishedListener listener) {
 
 		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), noteIdentifierAsString);
+				MediaType.parse(APPLICATION_JSON), noteIdentifierAsString);
 
 		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "getallversionsofnote")
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.url(ServerUrls.dbUrl + "getallversionsofnote")
+				.addHeader(AuthHeader.key, AuthHeader.value)
 				.post(body)
 				.build();
 
@@ -140,7 +132,7 @@ public class HttpRequestHelper {
 			}
 
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response)  {
 				listener.onResponse(call,response);
 			}
 		});
@@ -148,11 +140,11 @@ public class HttpRequestHelper {
 
 	public void getPreviousVersionsOfNote(String noteIdentifierAsString, final HttpRequestFinishedListener listener){
 		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), noteIdentifierAsString);
+				MediaType.parse(APPLICATION_JSON), noteIdentifierAsString);
 
 		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "getnotebyidandversion")
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.url(ServerUrls.dbUrl + "getnotebyidandversion")
+				.addHeader(AuthHeader.key, AuthHeader.value)
 				.post(body)
 				.build();
 
@@ -165,7 +157,7 @@ public class HttpRequestHelper {
 			}
 
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response)  {
 				listener.onResponse(call, response);
 			}
 		});
@@ -202,9 +194,9 @@ public class HttpRequestHelper {
 		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
 
 		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + endpoint)
+				.url(ServerUrls.dbUrl + endpoint)
 				.get()
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.addHeader(AuthHeader.key, AuthHeader.value)
 				.build();
 
 		client.newCall(request).enqueue(new Callback() {
@@ -214,7 +206,7 @@ public class HttpRequestHelper {
 			}
 
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response)  {
 				listener.onResponse(call, response);
 			}
 		});
@@ -227,10 +219,10 @@ public class HttpRequestHelper {
 		String json = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
 
 		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), json);
+				MediaType.parse(APPLICATION_JSON), json);
 
 		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_AUTH, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_AUTH_API))
+				.url(ServerUrls.authUrl)
 				.post(body)
 				.build();
 
@@ -253,6 +245,17 @@ public class HttpRequestHelper {
 				}
 			}
 		});
+	}
+
+	private static class ServerUrls{
+		public static String dbUrl = settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) ;
+		public static String authUrl = settings.getString(PreferencesActivity.PREFS_URL_AUTH, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_AUTH_API);
+	}
+
+	private static class AuthHeader{
+		public static String key = "Authorization";
+		public static String value = AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken();
+
 	}
 
 }

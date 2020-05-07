@@ -52,7 +52,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
 		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 		setContentView(R.layout.activity_note_details);
 
-		httpRequestHelper = new HttpRequestHelper(settings, this);
+		httpRequestHelper = new HttpRequestHelper(settings);
 
 		//Spinner populeren
 		Spinner spinner = findViewById(R.id.activity_note_details_spinner);

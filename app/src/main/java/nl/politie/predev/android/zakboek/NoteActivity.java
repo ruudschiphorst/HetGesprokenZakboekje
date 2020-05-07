@@ -252,7 +252,7 @@ public class NoteActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_loading);
 		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 
-		httpRequestHelper = new HttpRequestHelper(settings, this);
+		httpRequestHelper = new HttpRequestHelper(settings);
 
 		if (getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) != null) {
 			openNote(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE));

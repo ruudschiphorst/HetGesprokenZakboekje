@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
 		requestPermissionsIfNotGranted();
 
 		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
-		httpRequestHelper = new HttpRequestHelper(settings, this);
+		httpRequestHelper = new HttpRequestHelper(settings);
 	}
 
 	private void initViews() {

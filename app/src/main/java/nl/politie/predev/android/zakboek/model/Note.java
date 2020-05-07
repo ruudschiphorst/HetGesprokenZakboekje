@@ -1,4 +1,4 @@
-package nl.politie.predev.android.zakboek;
+package nl.politie.predev.android.zakboek.model;
 
 import java.sql.Timestamp;
 import java.util.List;

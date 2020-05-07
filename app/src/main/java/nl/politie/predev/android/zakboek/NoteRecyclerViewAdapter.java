@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.Base64;
 import java.util.List;
 
+import nl.politie.predev.android.zakboek.model.Multimedia;
+
 public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerViewAdapter.NoteRecyclerViewHolder>{
 
     private List<Multimedia> data;

@@ -31,19 +31,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import nl.politie.predev.android.zakboek.model.AccesTokenRequest;
+import nl.politie.predev.android.zakboek.model.Note;
+import nl.politie.predev.android.zakboek.model.NoteIdentifier;
 import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
@@ -59,7 +56,8 @@ public class MainActivity extends AppCompatActivity {
 	private FloatingActionButton fabDeleteMode;
 	private SharedPreferences settings;
 	private static final int REQUEST_CODE = 200;
-	private int selectedFilter=0;
+	private int selectedFilter = 0;
+	private HttpRequestHelper httpRequestHelper;
 
 	public interface RecyclerViewClickListener {
 		void onItemClicked(UUID uuid);
@@ -76,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
 		requestPermissionsIfNotGranted();
 
 		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
+		httpRequestHelper = new HttpRequestHelper(settings, this);
 	}
 
 	private void initViews() {
@@ -149,22 +148,22 @@ public class MainActivity extends AppCompatActivity {
 		spinner.setSelection(selectedFilter);
 
 		spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-											  @Override
-											  public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-											  		if(i != selectedFilter){
-											  			selectedFilter = i;
-														getNotesFromServer();
-													}
+			@Override
+			public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+				if (i != selectedFilter) {
+					selectedFilter = i;
+					getNotesFromServer();
+				}
 
-											  }
+			}
 
-											  @Override
-											  public void onNothingSelected(AdapterView<?> adapterView) {
+			@Override
+			public void onNothingSelected(AdapterView<?> adapterView) {
 
-											  }
-										  });
+			}
+		});
 
-				ImageButton ib = findViewById(R.id.activity_main_search);
+		ImageButton ib = findViewById(R.id.activity_main_search);
 		ib.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -217,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
 
 					public void onClick(DialogInterface dialog, int whichButton) {
 						sendDeleteRequestToServer(uuid);
-//						Toast.makeText(MainActivity.this, uuid.toString(), Toast.LENGTH_SHORT).show();
 					}
 				})
 				.setNegativeButton(android.R.string.no, null).show();
@@ -269,81 +267,34 @@ public class MainActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 
-		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), json);
-
-		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "deletenotebyid")
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
-				.post(body)
-				.build();
-
-		OkHttpClient client = new OkHttpClient();  //getUnsafeOkHttpClient();
-
-		client.newCall(request).enqueue(new Callback() {
-			@Override
-			public void onFailure(Call call, IOException e) {
-//				Log.e("err", e.getMessage());
-			}
+		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener(){
 
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
-				if (response.code() == 200) {
-
-				} else {
-					//TODO
-//					Log.e("bla", response.body().string());
-				}
+			public void onResponse(Call call, Response response) {
 				getNotesFromServer();
 			}
-		});
 
+			@Override
+			public void onFailure(Call call, IOException e) {
+
+			}
+
+			@Override
+			public void onError(String message) {
+
+			}
+		};
+
+		httpRequestHelper.deleteNote(json,listener);
 
 	}
 
 	private void getNotesFromServer() {
 
-		//Tijdens opstarten is er nog geen token (of gebruiker heeft nog geen credentials ingevoerd)
-		//Alles is asynchroon, dus het kan zijn dat we gewoon even moeten wachten tot de app een token heeft opgehaald
-		//En de server een reactie heeft gestuurd. Probeer het 5 seconden lang.
-		//Is er geen username en password, dan komt er automatisch een prompt
-		int tries = 0;
-
-		while (true) {
-
-			if (AccesTokenRequest.accesTokenRequest == null) {
-				if (tries > 10) {
-					//Meer dan 10 seconden gewacht -> geen nut. Stop maar met proberen en wacht tot onResume() opnieuw wordt aangeroepen,
-					//bijvoorbeeld omdat gebruiker het password scherm heeft bijgewerkt.
-					final Context context = getBaseContext();
-					runOnUiThread(new Runnable() {
-									  @Override
-									  public void run() {
-										  Toast.makeText(context, "Er is een probleem bij het inloggen. Probeer het later nogmaals.", Toast.LENGTH_LONG);
-									  }
-								  });
-
-					return;
-				} else {
-					tries++;
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			} else {
-				//Er is inmiddels een token, ga maar uit de lus
-				break;
-			}
-		}
-
-		OkHttpClient client = new OkHttpClient(); //getUnsafeOkHttpClient();
-
 		String endpoint;
 
 		//TODO hard coded meuk
-		switch (selectedFilter){
+		switch (selectedFilter) {
 			case 0:
 				endpoint = "getmynotes";
 				break;
@@ -361,25 +312,24 @@ public class MainActivity extends AppCompatActivity {
 				break;
 		}
 
-
-		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + endpoint)
-				.get()
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
-				.build();
-
-		client.newCall(request).enqueue(new Callback() {
+		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener() {
 			@Override
-			public void onFailure(Call call, IOException e) {
-//				Log.e("err", e.getMessage());
-			}
-
-			@Override
-			public void onResponse(Call call, Response response) throws IOException {
-				String resp = response.body().string();
-				ObjectMapper om = new ObjectMapper();
-				data = Arrays.asList(om.readValue(resp, Note[].class));
-				Collections.sort(data);
+			public void onResponse(Call call, Response response) {
+				try{
+					String resp = response.body().string();
+					ObjectMapper om = new ObjectMapper();
+					data = Arrays.asList(om.readValue(resp, Note[].class));
+					Collections.sort(data);
+				}catch (Exception e) {
+					final Context context = getBaseContext();
+					final Exception ex = e;
+					runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							Toast.makeText(context, ex.getMessage(), Toast.LENGTH_LONG);
+						}
+					});
+				}
 				//uitvoeren op main thread
 				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
 
@@ -393,8 +343,31 @@ public class MainActivity extends AppCompatActivity {
 				};
 				mainHandler.post(runnable);
 			}
-		});
 
+			@Override
+			public void onFailure(Call call, IOException e) {
+				final Context context = getBaseContext();
+				final IOException ex = e;
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						Toast.makeText(context, ex.getMessage(), Toast.LENGTH_LONG);
+					}
+				});
+			}
+
+			@Override
+			public void onError(String message) {
+				final Context context = getBaseContext();
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						Toast.makeText(context, "Er is een probleem bij het inloggen. Probeer het later nogmaals.", Toast.LENGTH_LONG);
+					}
+				});
+			}
+		};
+		httpRequestHelper.getNotesFromServer(endpoint, listener);
 	}
 
 	private ScheduledExecutorService getTokenRefresher() {
@@ -412,7 +385,7 @@ public class MainActivity extends AppCompatActivity {
 
 			scheduler.scheduleAtFixedRate(new Runnable() {
 				public void run() {
-					setToken();
+					httpRequestHelper.setToken();
 				}
 			}, 0, 10, TimeUnit.MINUTES);
 
@@ -435,47 +408,6 @@ public class MainActivity extends AppCompatActivity {
 		AccesTokenRequest.requested_at = null;
 	}
 
-	private void setToken() {
-
-//		Log.e("bla", "setting token...");
-
-		SharedPreferences settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
-		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "");
-		String password = settings.getString(PreferencesActivity.PREFS_PASS, "");
-
-		String json = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
-
-		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), json);
-
-		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_AUTH, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_AUTH_API))
-				.post(body)
-				.build();
-
-		OkHttpClient client = new OkHttpClient();  //getUnsafeOkHttpClient();
-
-		client.newCall(request).enqueue(new Callback() {
-			@Override
-			public void onFailure(Call call, IOException e) {
-//				Log.e("err", e.getMessage());
-			}
-
-			@Override
-			public void onResponse(Call call, Response response) throws IOException {
-				if (response.code() == 200) {
-					String resp = response.body().string();
-					ObjectMapper om = new ObjectMapper();
-					AccesTokenRequest.accesTokenRequest = om.readValue(resp, AccesTokenRequest.class);
-					AccesTokenRequest.requested_at = new Date();
-				} else {
-					//TODO
-//					Log.e("bla", response.body().string());
-				}
-			}
-		});
-	}
-
 	private void requestPermissionsIfNotGranted() {
 
 		if ((ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) ||
@@ -483,6 +415,5 @@ public class MainActivity extends AppCompatActivity {
 			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE);
 		}
 	}
-
 
 }

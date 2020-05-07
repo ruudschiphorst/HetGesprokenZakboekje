@@ -30,12 +30,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import nl.politie.predev.android.zakboek.model.Note;
+import nl.politie.predev.android.zakboek.model.NoteIdentifier;
 import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class NoteDetailsActivity extends AppCompatActivity {
@@ -46,6 +43,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
 	private SharedPreferences settings;
 	private Note n;
 	private List<Note> data = new ArrayList<Note>();
+	private HttpRequestHelper httpRequestHelper;
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,6 +51,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 		setContentView(R.layout.activity_note_details);
+
+		httpRequestHelper = new HttpRequestHelper(settings, this);
 
 		//Spinner populeren
 		Spinner spinner = findViewById(R.id.activity_note_details_spinner);
@@ -164,47 +164,45 @@ public class NoteDetailsActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 
-		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), json);
-
-		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "getnotebyidandversion")
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
-				.post(body)
-				.build();
-
-		OkHttpClient client = new OkHttpClient();  //getUnsafeOkHttpClient();
-
-		client.newCall(request).enqueue(new Callback() {
+		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener() {
 			@Override
-			public void onFailure(Call call, IOException e) {
-//				Log.e("err", e.getMessage());
-			}
-
-			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response) {
 				if (response.code() == 200) {
-					String resp = response.body().string();
-					ObjectMapper om = new ObjectMapper();
-					final Note note = om.readValue(resp, Note.class);
+					try{
+						String resp = response.body().string();
+						ObjectMapper om = new ObjectMapper();
+						final Note note = om.readValue(resp, Note.class);
 
-					//uitvoeren op main thread
-					Handler mainHandler = new Handler(getBaseContext().getMainLooper());
+						//uitvoeren op main thread
+						Handler mainHandler = new Handler(getBaseContext().getMainLooper());
 
-					Runnable runnable = new Runnable() {
-						@Override
-						public void run() {
-							setPreviousTextAndReturn(note.getNote_text());
+						Runnable runnable = new Runnable() {
+							@Override
+							public void run() {
+								setPreviousTextAndReturn(note.getNote_text());
 
-						}
-					};
-					mainHandler.post(runnable);
+							}
+						};
+						mainHandler.post(runnable);
+					} catch (Exception e){
+						//TODO
+					}
 				} else {
 					//TODO
-//					Log.e("bla", response.body().string());
 				}
 			}
-		});
+
+			@Override
+			public void onFailure(Call call, IOException e) {
+
+			}
+
+			@Override
+			public void onError(String message) {
+
+			}
+		};
+		httpRequestHelper.getPreviousVersionsOfNote(json, listener);
 	}
 
 	private void setPreviousTextAndReturn(String text){
@@ -284,48 +282,48 @@ public class NoteDetailsActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 
-		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), json);
-
-		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "getallversionsofnote")
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
-				.post(body)
-				.build();
-
-		OkHttpClient client = new OkHttpClient();  //getUnsafeOkHttpClient();
-
-		client.newCall(request).enqueue(new Callback() {
+		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener() {
 			@Override
-			public void onFailure(Call call, IOException e) {
-//				Log.e("err", e.getMessage());
-			}
-
-			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response) {
 				if (response.code() == 200) {
-					String resp = response.body().string();
-//					Log.e("bla","resp " + resp);
-					ObjectMapper om = new ObjectMapper();
-					data = Arrays.asList(om.readValue(resp, Note[].class));
-					Collections.sort(data);
-					//uitvoeren op main thread
-					Handler mainHandler = new Handler(getBaseContext().getMainLooper());
+					try{
+						String resp = response.body().string();
+						ObjectMapper om = new ObjectMapper();
+						data = Arrays.asList(om.readValue(resp, Note[].class));
+						Collections.sort(data);
+						//uitvoeren op main thread
+						Handler mainHandler = new Handler(getBaseContext().getMainLooper());
 
-					Runnable runnable = new Runnable() {
-						@Override
-						public void run() {
-							recycleradapter.updateData(data);
+						Runnable runnable = new Runnable() {
+							@Override
+							public void run() {
+								recycleradapter.updateData(data);
 
-						}
-					};
-					mainHandler.post(runnable);
+							}
+						};
+						mainHandler.post(runnable);
+
+					}catch (Exception e){
+						//TODO
+					}
 				} else {
 					//TODO
-//					Log.e("bla", response.body().string());
 				}
 			}
-		});
+
+			@Override
+			public void onFailure(Call call, IOException e) {
+
+			}
+
+			@Override
+			public void onError(String message) {
+
+			}
+		};
+
+		httpRequestHelper.getAllVersionsOfNote(json, listener);
+
 	}
 
 }

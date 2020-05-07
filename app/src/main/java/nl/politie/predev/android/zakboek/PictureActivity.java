@@ -17,6 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
 
+import nl.politie.predev.android.zakboek.model.AccesTokenRequest;
+import nl.politie.predev.android.zakboek.model.Multimedia;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;

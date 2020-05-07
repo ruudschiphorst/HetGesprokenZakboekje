@@ -11,7 +11,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
-
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MenuItem;
@@ -40,12 +39,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import nl.politie.predev.android.zakboek.model.AccesTokenRequest;
+import nl.politie.predev.android.zakboek.model.Multimedia;
+import nl.politie.predev.android.zakboek.model.Note;
+import nl.politie.predev.android.zakboek.model.NoteIdentifier;
 import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class NoteActivity extends AppCompatActivity {
@@ -58,7 +56,7 @@ public class NoteActivity extends AppCompatActivity {
 	private Note n = null;
 	private TextView title = null;
 	private TextView textView = null;
-	private TextView nonFinalText =null;
+	private TextView nonFinalText = null;
 	private InsecureStempolRpcSpeechService speechService;
 	private VoiceRecorder voiceRecorder;
 	private List<Multimedia> noteMultimedia;// = new ArrayList<Multimedia>();
@@ -70,6 +68,7 @@ public class NoteActivity extends AppCompatActivity {
 	private String currentPhotoPath;
 	private VisualizerView visualizerView;
 	private boolean dirty;
+	private HttpRequestHelper httpRequestHelper;
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(String multimediaID);
@@ -151,6 +150,7 @@ public class NoteActivity extends AppCompatActivity {
 
 		@Override
 		public void onServiceDisconnected(ComponentName componentName) {
+			speechService.finishRecognizing();
 			speechService = null;
 		}
 
@@ -184,7 +184,7 @@ public class NoteActivity extends AppCompatActivity {
 					while (text.contains(" .")) {
 						text = text.replace(" .", ".");
 					}
-					while(text.contains("  ")) {
+					while (text.contains("  ")) {
 						text = text.replace("  ", " ");
 					}
 					//Zorg er wel voor dat we niet de hele string kwijt zijn. Dan hoeft ie niets te doen.
@@ -202,7 +202,7 @@ public class NoteActivity extends AppCompatActivity {
 							public void run() {
 								String plottedText;
 								String existingText = textView.getText().toString();
-								if(existingText.endsWith(" ")) {
+								if (existingText.endsWith(" ")) {
 									plottedText = existingText + preparedText + " ";
 								} else {
 									plottedText = existingText + " " + preparedText + " ";
@@ -211,7 +211,7 @@ public class NoteActivity extends AppCompatActivity {
 								nonFinalText.setText("");
 							}
 						});
-					}else{
+					} else {
 						//Tussenresultaten
 						runOnUiThread(new Runnable() {
 							@Override
@@ -228,11 +228,11 @@ public class NoteActivity extends AppCompatActivity {
 				}
 
 				@Override
-				public void onError(final String message){
+				public void onError(final String message) {
 					runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
-							Toast.makeText(getBaseContext(),message,Toast.LENGTH_LONG).show();
+							Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
 						}
 					});
 				}
@@ -252,6 +252,8 @@ public class NoteActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_loading);
 		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 
+		httpRequestHelper = new HttpRequestHelper(settings, this);
+
 		if (getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE) != null) {
 			openNote(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE));
 		} else {
@@ -270,14 +272,6 @@ public class NoteActivity extends AppCompatActivity {
 		title = findViewById(R.id.note_tv_title);
 		textView = findViewById(R.id.note_tv_text);
 		nonFinalText = findViewById(R.id.note_tv_nonfinal_text);
-
-//		ImageButton ib = findViewById(R.id.note_btn_save);
-//		ib.setOnClickListener(new View.OnClickListener() {
-//			@Override
-//			public void onClick(View view) {
-//				updateAndReturnNote();
-//			}
-//		});
 
 		final ImageButton ibMic = findViewById(R.id.note_btn_mic);
 
@@ -366,7 +360,7 @@ public class NoteActivity extends AppCompatActivity {
 		noteToPass.setIs_public(n.isIs_public());
 
 		ObjectMapper om = new ObjectMapper();
-		String noteToPassAsString ="";
+		String noteToPassAsString = "";
 		try {
 			noteToPassAsString = om.writeValueAsString(noteToPass);
 		} catch (IOException e) {
@@ -403,7 +397,7 @@ public class NoteActivity extends AppCompatActivity {
 			}
 		}
 
-		if(requestCode == NOTE_DETAILS_REQUEST && resultCode == Activity.RESULT_OK) {
+		if (requestCode == NOTE_DETAILS_REQUEST && resultCode == Activity.RESULT_OK) {
 			ObjectMapper om = new ObjectMapper();
 			String returnedNoteAsString = data.getStringExtra("result");
 			try {
@@ -413,7 +407,7 @@ public class NoteActivity extends AppCompatActivity {
 				n.setGrondslag(returnedNote.getGrondslag());
 				n.setAutorisatieniveau(returnedNote.getAutorisatieniveau());
 				n.setAfhandelcode(returnedNote.getAfhandelcode());
-				if(returnedNote.getNote_text() != null && !returnedNote.getNote_text().equals("")){
+				if (returnedNote.getNote_text() != null && !returnedNote.getNote_text().equals("")) {
 					n.setNote_text(returnedNote.getNote_text());
 					textView.setText(returnedNote.getNote_text());
 				}
@@ -440,12 +434,11 @@ public class NoteActivity extends AppCompatActivity {
 
 	@Override
 	public void onBackPressed() {
-		if(dirty) {
+		if (dirty) {
 			updateAndReturnNote();
-		}else{
+		} else {
 			finish();
 		}
-//		super.onBackPressed();
 	}
 
 
@@ -504,6 +497,9 @@ public class NoteActivity extends AppCompatActivity {
 		}
 		visualizerView.setVisibility(View.GONE);
 		nonFinalText.setVisibility(View.GONE);
+		if (speechService != null) {
+			speechService.finishRecognizing();
+		}
 	}
 
 	//NotNull
@@ -557,26 +553,9 @@ public class NoteActivity extends AppCompatActivity {
 
 	private void saveNote(String note) {
 
-		OkHttpClient client = new OkHttpClient();
-
-		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), note);
-		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "addnote")
-				.post(body)
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
-				.build();
-		setContentView(R.layout.activity_saving);
-
-		client.newCall(request).enqueue(new Callback() {
+		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener() {
 			@Override
-			public void onFailure(Call call, IOException e) {
-//				Log.e("err", e.getMessage());
-			}
-
-			@Override
-			public void onResponse(Call call, Response response) throws IOException {
-
+			public void onResponse(Call call, Response response) {
 				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
 				Runnable runnable = new Runnable() {
 					@Override
@@ -588,7 +567,19 @@ public class NoteActivity extends AppCompatActivity {
 				};
 				mainHandler.post(runnable);
 			}
-		});
+
+			@Override
+			public void onFailure(Call call, IOException e) {
+
+			}
+
+			@Override
+			public void onError(String message) {
+
+			}
+		};
+
+		httpRequestHelper.saveNote(note, listener);
 
 	}
 
@@ -598,7 +589,6 @@ public class NoteActivity extends AppCompatActivity {
 			return;
 		}
 
-		OkHttpClient client = new OkHttpClient();
 		NoteIdentifier noteIdentifier = new NoteIdentifier();
 		noteIdentifier.setNoteID(UUID.fromString(noteUUID));
 		ObjectMapper om = new ObjectMapper();
@@ -610,36 +600,35 @@ public class NoteActivity extends AppCompatActivity {
 //			Log.e("Error", e.getMessage());
 		}
 
-		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), json);
+		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener() {
+			@Override
+			public void onResponse(Call call, Response response) {
+				try {
+					final String resp = response.body().string();
+					Handler mainHandler = new Handler(getBaseContext().getMainLooper());
+					Runnable runnable = new Runnable() {
+						@Override
+						public void run() {
+							handleFetchedNote(resp);
+						}
+					};
+					mainHandler.post(runnable);
+				} catch (Exception e) {
+					//TODO
+				}
+			}
 
-		Request request = new Request.Builder()
-				.url(settings.getString(PreferencesActivity.PREFS_URL_DB, PreferencesActivity.DEFAULT_BASE_HTTPS_URL_DB_API) + "getnote")
-				.post(body)
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
-				.build();
-
-		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onFailure(Call call, IOException e) {
-//				Log.e("err", e.getMessage());
+
 			}
 
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
-				final String resp = response.body().string();
-				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
-				Runnable runnable = new Runnable() {
-					@Override
-					public void run() {
-						handleFetchedNote(resp);
-					}
-				};
-				mainHandler.post(runnable);
+			public void onError(String message) {
 
 			}
-		});
-
+		};
+		httpRequestHelper.getNoteMostRecentVersion(json,listener);
 	}
 
 	@Override
@@ -671,7 +660,7 @@ public class NoteActivity extends AppCompatActivity {
 
 		title.setText(n.getTitle());
 		textView.setText(n.getNote_text());
-		dirty =false;
+		dirty = false;
 	}
 
 }

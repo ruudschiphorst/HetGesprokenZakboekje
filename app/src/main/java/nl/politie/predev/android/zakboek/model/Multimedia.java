@@ -1,4 +1,4 @@
-package nl.politie.predev.android.zakboek;
+package nl.politie.predev.android.zakboek.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

@@ -20,6 +20,7 @@ public class InternetStatusChecker implements Runnable{
 
 	public InternetStatusChecker(ViewGroup context) {
 		this.context = context;
+
 	}
 
 	public void addListener(InternetStatusCheckerListener listener) {
@@ -35,29 +36,8 @@ public class InternetStatusChecker implements Runnable{
 	@Override
 	public void run() {
 
-		boolean haveConnectedWifi = false;
-		boolean haveConnectedMobile = false;
-
-		ConnectivityManager cm = (ConnectivityManager) context.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 		while(!Thread.interrupted()){
-			Network[] networks = cm.getAllNetworks();
-			NetworkInfo networkInfo;
-			for (Network mNetwork : networks) {
-				networkInfo = cm.getNetworkInfo(mNetwork);
-				if(networkInfo != null) {
-					if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI){
-						haveConnectedWifi = networkInfo.isConnected();
-					}
-					if (networkInfo.getType()== ConnectivityManager.TYPE_MOBILE){
-						haveConnectedMobile = networkInfo.isConnected();
-
-					}
-				}else{
-					haveConnectedWifi=false;
-					haveConnectedMobile = false;
-				}
-			}
-			if(haveConnectedWifi || haveConnectedMobile) {
+			if(haveInternet()) {
 				//Alleen reconnect event sturen als de verbinding daadwerkelijk is hersteld, niet een event sturen als hij gewoon goed draait
 				if(internetFailed) {
 					internetFailed = false;
@@ -80,6 +60,39 @@ public class InternetStatusChecker implements Runnable{
 			}
 		}
 		Thread.currentThread().interrupt();
+	}
+
+	public boolean haveInternet(){
+
+		boolean haveConnectedWifi = false;
+		boolean haveConnectedMobile = false;
+
+		ConnectivityManager cm = (ConnectivityManager) context.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+		Network[] networks = cm.getAllNetworks();
+		NetworkInfo networkInfo;
+		for (Network mNetwork : networks) {
+			networkInfo = cm.getNetworkInfo(mNetwork);
+			if(networkInfo != null) {
+				if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI){
+					haveConnectedWifi = networkInfo.isConnected();
+				}
+				if (networkInfo.getType()== ConnectivityManager.TYPE_MOBILE){
+					haveConnectedMobile = networkInfo.isConnected();
+
+				}
+			}else{
+				haveConnectedWifi=false;
+				haveConnectedMobile = false;
+			}
+		}
+
+		if(haveConnectedWifi || haveConnectedMobile) {
+			return true;
+		}else{
+			return false;
+		}
+
 	}
 
 	//Deze twee events publiceren we

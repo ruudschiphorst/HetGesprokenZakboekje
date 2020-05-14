@@ -16,4 +16,5 @@
 	<string name="yes">Ja</string>
 	<string name="no">Nee</string>
 	<string name="previous_versions">Vorige versies</string>
+	<string name="no_interwebs">Geen internetverbinding!</string>
 </resources>

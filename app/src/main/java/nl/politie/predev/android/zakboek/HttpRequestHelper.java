@@ -3,6 +3,8 @@ package nl.politie.predev.android.zakboek;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
+
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,6 +37,30 @@ public class HttpRequestHelper {
 		this.settings = settings;
 	}
 
+
+	public void getHealth(final HttpRequestFinishedListener listener){
+
+		OkHttpClient client = new OkHttpClient();
+
+
+		Request request = new Request.Builder()
+				.url(ServerUrls.dbUrl + "health")
+				.get()
+				.build();
+
+		client.newCall(request).enqueue(new Callback() {
+			@Override
+			public void onFailure(Call call, IOException e) {
+				listener.onFailure(call, e);
+			}
+
+			@Override
+			public void onResponse(Call call, Response response) {
+				listener.onResponse(call, response);
+			}
+		});
+
+	}
 
 	public void saveNote(String noteAsJson, final HttpRequestFinishedListener listener) {
 
@@ -211,6 +237,34 @@ public class HttpRequestHelper {
 			}
 		});
 	}
+
+	public void getMultimedia(String multimediaID, final HttpRequestFinishedListener listener) {
+		OkHttpClient client = new OkHttpClient();
+
+		String json = "{\"multimediaID\": \"" + multimediaID + "\"}";
+
+
+		RequestBody body = RequestBody.create(
+				MediaType.parse("application/json"), json);
+
+		Request request = new Request.Builder()
+				.url(ServerUrls.dbUrl + "getmultimedia")
+				.post(body)
+				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
+				.build();
+		client.newCall(request).enqueue(new Callback() {
+			@Override
+			public void onFailure(Call call, IOException e) {
+				listener.onFailure(call, e);
+			}
+
+			@Override
+			public void onResponse(Call call, Response response) throws IOException {
+				listener.onResponse(call, response);
+			}
+		});
+	}
+
 	public void setToken(){
 
 		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "");
@@ -231,11 +285,13 @@ public class HttpRequestHelper {
 		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onFailure(Call call, IOException e) {
+				setToken();
 			}
 
 			@Override
 			public void onResponse(Call call, Response response) throws IOException {
 				if (response.code() == 200) {
+
 					String resp = response.body().string();
 					ObjectMapper om = new ObjectMapper();
 					AccesTokenRequest.accesTokenRequest = om.readValue(resp, AccesTokenRequest.class);

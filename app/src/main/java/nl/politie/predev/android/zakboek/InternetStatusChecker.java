@@ -9,16 +9,17 @@ import android.widget.LinearLayout;
 
 import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class InternetStatusChecker implements Runnable{
 
 	private boolean internetFailed = false;
-	private ViewGroup context;               //Ik moet een context hebben, anders kan ik de status niet ophalen
+	private Context context;               //Ik moet een context hebben, anders kan ik de status niet ophalen
 	private List<InternetStatusCheckerListener> listeners = Lists.newArrayList();
+	private boolean firstRun=true;
 
-
-	public InternetStatusChecker(ViewGroup context) {
+	public InternetStatusChecker(Context context) {
 		this.context = context;
 
 	}
@@ -32,11 +33,15 @@ public class InternetStatusChecker implements Runnable{
 			listeners.remove(listener);
 		}
 	}
+	public void removeListeners() {
+		this.listeners = new ArrayList<InternetStatusCheckerListener>();
+	}
 
 	@Override
 	public void run() {
 
 		while(!Thread.interrupted()){
+
 			if(haveInternet()) {
 				//Alleen reconnect event sturen als de verbinding daadwerkelijk is hersteld, niet een event sturen als hij gewoon goed draait
 				if(internetFailed) {
@@ -67,7 +72,7 @@ public class InternetStatusChecker implements Runnable{
 		boolean haveConnectedWifi = false;
 		boolean haveConnectedMobile = false;
 
-		ConnectivityManager cm = (ConnectivityManager) context.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
 		Network[] networks = cm.getAllNetworks();
 		NetworkInfo networkInfo;

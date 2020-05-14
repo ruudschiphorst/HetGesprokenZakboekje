@@ -56,41 +56,44 @@ public class PictureActivity extends AppCompatActivity {
 			}
 		}
 
-		//Niet uit local storage kunnen halen, dus we halen hem op vanaf de server
+		HttpRequestHelper helper = new HttpRequestHelper(getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0));
 
-		OkHttpClient client = new OkHttpClient();
-
-		String json = "{\"multimediaID\": \"" + multimediaID + "\"}";
-
-
-		RequestBody body = RequestBody.create(
-				MediaType.parse("application/json"), json);
-
-		Request request = new Request.Builder()
-				.url(BASE_HTTPS_URL_DB_API + "getmultimedia")
-				.post(body)
-				.addHeader("Authorization", AccesTokenRequest.accesTokenRequest.getTokenType() + " " + AccesTokenRequest.accesTokenRequest.getAccessToken())
-				.build();
-		client.newCall(request).enqueue(new Callback() {
+		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener() {
 			@Override
-			public void onFailure(Call call, IOException e) {
-//				Log.e("err", e.getMessage());
-			}
+			public void onResponse(Call call, Response response) {
+				String resp;
+				try {
+					resp = response.body().string();
+				} catch (IOException e) {
+					resp ="";
+					e.printStackTrace();
+				}
+				final String finalResp = resp;
 
-			@Override
-			public void onResponse(Call call, Response response) throws IOException {
-				final String resp = response.body().string();
 				Handler mainHandler = new Handler(getBaseContext().getMainLooper());
 				Runnable runnable = new Runnable() {
 					@Override
 					public void run() {
-						setImage(resp);
+						setImage(finalResp);
 					}
 				};
 				mainHandler.post(runnable);
 
 			}
-		});
+
+			@Override
+			public void onFailure(Call call, IOException e) {
+
+			}
+
+			@Override
+			public void onError(String message) {
+
+			}
+		};
+
+		helper.getMultimedia(multimediaID,listener);
+
 	}
 
 	private void setImage(byte[] imageData) {

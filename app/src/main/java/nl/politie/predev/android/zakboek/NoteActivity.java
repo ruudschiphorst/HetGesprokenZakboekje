@@ -193,8 +193,8 @@ public class NoteActivity extends AppCompatActivity {
 						return;
 					}
 
-					final String preparedText = text;
 
+					final String preparedText = text;
 					if (isFinal) {
 
 						runOnUiThread(new Runnable() {

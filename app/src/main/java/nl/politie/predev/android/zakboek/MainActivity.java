@@ -13,8 +13,8 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -58,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
 	private static final int REQUEST_CODE = 200;
 	private int selectedFilter = 0;
 	private HttpRequestHelper httpRequestHelper;
+	private InternetStatusChecker internetStatusChecker;
+	private Thread internetStatusCheckerThread;
+	private TextView noInternetWarning;
+	private Spinner filterSpinner;
 
 	public interface RecyclerViewClickListener {
 		void onItemClicked(UUID uuid);
@@ -65,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
 		boolean onItemLongClicked(UUID uuid, String title, Integer version);
 
 	}
-
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +78,79 @@ public class MainActivity extends AppCompatActivity {
 
 		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 		httpRequestHelper = new HttpRequestHelper(settings);
+
+
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		initInternetChecker();
+		if (internetStatusChecker.haveInternet()) {
+			initWithInternet();
+		} else {
+			initNoInternet();
+		}
+
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		stopTokenRefresher();
+		stopInternetStatusChecker();
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == NOTE_ACTIVITY_RESULT) {
+			if (resultCode == Activity.RESULT_OK) {
+				setContentView(R.layout.activity_loading);
+				getNotesFromServer();
+			} else {
+
+			}
+		}
+	}
+
+	private void initTokenRefresher() {
+		if (tokenRefresher == null || tokenRefresher.isShutdown() || AccesTokenRequest.shouldRefresh()) {
+			tokenRefresher = getTokenRefresher();
+		}
+	}
+
+	private void stopTokenRefresher() {
+		if (tokenRefresher != null) {
+			tokenRefresher.shutdown();
+		}
+		tokenRefresher = null;
+		AccesTokenRequest.accesTokenRequest = null;
+		AccesTokenRequest.requested_at = null;
+	}
+
+	private void initInternetChecker() {
+
+		if (internetStatusCheckerThread == null || internetStatusCheckerThread.isInterrupted()) {
+			internetStatusChecker = new InternetStatusChecker(this);
+			internetStatusChecker.addListener(getInternetStatusCheckerListener());
+			internetStatusCheckerThread = new Thread(internetStatusChecker);
+			internetStatusCheckerThread.start();
+		}
+
+	}
+
+	private void stopInternetStatusChecker() {
+		if (internetStatusCheckerThread != null) {
+			internetStatusChecker.removeListeners();
+			internetStatusCheckerThread.interrupt();
+			internetStatusChecker = null;
+		}
 	}
 
 	private void initViews() {
@@ -138,23 +214,22 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-		Spinner spinner = findViewById(R.id.activity_main_filters_spinner);
+		filterSpinner = findViewById(R.id.activity_main_filters_spinner);
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
 				R.array.filters, android.R.layout.simple_spinner_item);
 
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinner.setAdapter(adapter);
+		filterSpinner.setAdapter(adapter);
 
-		spinner.setSelection(selectedFilter);
+		filterSpinner.setSelection(selectedFilter);
 
-		spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+		filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-				if (i != selectedFilter) {
+				if (i != selectedFilter && internetStatusChecker.haveInternet()) {
 					selectedFilter = i;
 					getNotesFromServer();
 				}
-
 			}
 
 			@Override
@@ -163,18 +238,41 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-		ImageButton ib = findViewById(R.id.activity_main_search);
-		ib.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				Spinner spinner = findViewById(R.id.activity_main_filters_spinner);
-				selectedFilter = spinner.getSelectedItemPosition();
-				setContentView(R.layout.activity_loading);
-				getNotesFromServer();
-			}
-		});
+//		ImageButton ib = findViewById(R.id.activity_main_search);
+//		ib.setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View view) {
+//				Spinner spinner = findViewById(R.id.activity_main_filters_spinner);
+//				selectedFilter = spinner.getSelectedItemPosition();
+//				setContentView(R.layout.activity_loading);
+//				getNotesFromServer();
+//			}
+//		});
+		noInternetWarning = findViewById(R.id.activity_main_warning);
+//		loading = false;
+//		setInternetDependantVisuals();
 
 	}
+
+//	private void setInternetDependantVisuals() {
+//
+//		runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+//				if (loading) {
+//					return;
+//				}
+//				if (internetStatusChecker.haveInternet()) {
+//					noInternetWarning.setVisibility(View.GONE);
+//					filterSpinner.setEnabled(true);
+//				} else {
+//					noInternetWarning.setVisibility(View.VISIBLE);
+//					filterSpinner.setEnabled(false);
+//				}
+//			}
+//		});
+//
+//	}
 
 	private void setDeleteModeVisuals() {
 		if (deleteMode) {
@@ -221,15 +319,6 @@ public class MainActivity extends AppCompatActivity {
 				.setNegativeButton(android.R.string.no, null).show();
 	}
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-
-		if (tokenRefresher == null || tokenRefresher.isShutdown() || AccesTokenRequest.shouldRefresh()) {
-			tokenRefresher = getTokenRefresher();
-		}
-		getNotesFromServer();
-	}
 
 	private void openNoteActivity(String note) {
 
@@ -239,23 +328,10 @@ public class MainActivity extends AppCompatActivity {
 
 	}
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode == NOTE_ACTIVITY_RESULT) {
-			if (resultCode == Activity.RESULT_OK) {
-				setContentView(R.layout.activity_loading);
-				getNotesFromServer();
-			} else {
-
-			}
-		}
-	}
 
 	private void sendDeleteRequestToServer(UUID uuid) {
 
 		setContentView(R.layout.activity_loading);
-
 		NoteIdentifier noteIdentifier = new NoteIdentifier();
 		noteIdentifier.setNoteID(uuid);
 
@@ -267,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 
-		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener(){
+		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener() {
 
 			@Override
 			public void onResponse(Call call, Response response) {
@@ -285,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 		};
 
-		httpRequestHelper.deleteNote(json,listener);
+		httpRequestHelper.deleteNote(json, listener);
 
 	}
 
@@ -315,12 +391,12 @@ public class MainActivity extends AppCompatActivity {
 		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener() {
 			@Override
 			public void onResponse(Call call, Response response) {
-				try{
+				try {
 					String resp = response.body().string();
 					ObjectMapper om = new ObjectMapper();
 					data = Arrays.asList(om.readValue(resp, Note[].class));
 					Collections.sort(data);
-				}catch (Exception e) {
+				} catch (Exception e) {
 					final Context context = getBaseContext();
 					final Exception ex = e;
 					runOnUiThread(new Runnable() {
@@ -336,7 +412,7 @@ public class MainActivity extends AppCompatActivity {
 				Runnable runnable = new Runnable() {
 					@Override
 					public void run() {
-						initViews();
+//						initViews();
 						adapter.updateData(data);
 
 					}
@@ -394,19 +470,6 @@ public class MainActivity extends AppCompatActivity {
 		return null;
 	}
 
-	@Override
-	protected void onStop() {
-		super.onStop();
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		tokenRefresher.shutdown();
-		tokenRefresher = null;
-		AccesTokenRequest.accesTokenRequest = null;
-		AccesTokenRequest.requested_at = null;
-	}
 
 	private void requestPermissionsIfNotGranted() {
 
@@ -414,6 +477,69 @@ public class MainActivity extends AppCompatActivity {
 				ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE);
 		}
+	}
+
+	private InternetStatusChecker.InternetStatusCheckerListener getInternetStatusCheckerListener() {
+
+		return new InternetStatusChecker.InternetStatusCheckerListener() {
+			@Override
+			public void onInternetDisconnected() {
+				initNoInternet();
+			}
+
+			@Override
+			public void onInternetReconnected() {
+				initWithInternet();
+			}
+		};
+	}
+
+
+	private void initNoInternet() {
+		stopTokenRefresher();
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				initViews();
+				noInternetWarning.setVisibility(View.VISIBLE);
+				fabDeleteMode.setEnabled(false);
+				filterSpinner.setEnabled(false);
+			}
+		});
+
+	}
+
+	private void initWithInternet() {
+
+		HttpRequestHelper.HttpRequestFinishedListener listener = new HttpRequestHelper.HttpRequestFinishedListener() {
+			@Override
+			public void onResponse(Call call, Response response) {
+				initTokenRefresher();
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						initViews();
+						noInternetWarning.setVisibility(View.INVISIBLE);
+						fabDeleteMode.setEnabled(true);
+						filterSpinner.setEnabled(true);
+						getNotesFromServer();
+					}
+				});
+			}
+
+			@Override
+			public void onFailure(Call call, IOException e) {
+				initWithInternet();
+			}
+
+			@Override
+			public void onError(String message) {
+
+			}
+		};
+		httpRequestHelper.getHealth(listener);
+
+
 	}
 
 }

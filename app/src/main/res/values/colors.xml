@@ -11,7 +11,7 @@
     <!-- sand(Safe Hex3) -->
     <color name="green1">#99cc33</color>
     <color name="green3">#669900</color>
-    <color name="red">#cc0000</color>
+    <color name="red">#CC0000</color>
 	<color name="white">#ffffff</color>
     <color name="logoblue">#00427f</color>
     <color name="buttonStroke">#808080</color>

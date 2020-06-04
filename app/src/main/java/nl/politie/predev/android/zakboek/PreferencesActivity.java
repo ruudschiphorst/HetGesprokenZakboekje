@@ -33,6 +33,8 @@ public class PreferencesActivity extends AppCompatActivity {
 	public static final String PREFS_PASS = "passwd";
 	public static final String PREFS_URL_AUTH = "auth_url";
 	public static final String PREFS_URL_DB = "db_url";
+	public static final String PREFS_UNIQUE_ID = "unique_id";
+	public static final String PREFS_CONTENT_ID = "content_id";
 	public static final String DEFAULT_BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
 	public static final String DEFAULT_BASE_HTTPS_URL_AUTH_API = "https://stempolextras.westeurope.cloudapp.azure.com:8085/api/auth/generatetoken";
 	private SharedPreferences settings;

@@ -37,10 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -53,7 +50,7 @@ import nl.politie.predev.android.zakboek.model.NoteIdentifier;
 import okhttp3.Call;
 import okhttp3.Response;
 
-public class NoteActivity extends AppCompatActivity {
+public class NoteActivityWebsock extends AppCompatActivity {
 
 	public static final String EXTRA_MESSAGE_NOTE = "EXTRA_MESSAGE_NOTE";
 	public static final String EXTRA_MESSAGE_NOTE_DETAILS = "EXTRA_MESSAGE_NOTE_DETAILS";
@@ -64,7 +61,7 @@ public class NoteActivity extends AppCompatActivity {
 	private TextView title = null;
 	private TextView textView = null;
 	private TextView nonFinalText = null;
-	private InsecureStempolRpcSpeechService speechService;
+//	private InsecureStempolRpcSpeechService speechService;
 	private VoiceRecorder voiceRecorder;
 	private List<Multimedia> noteMultimedia;// = new ArrayList<Multimedia>();
 	private NoteRecyclerViewAdapter adapter;
@@ -82,9 +79,11 @@ public class NoteActivity extends AppCompatActivity {
 	private int bufferAtPosition = 0;
 	private ScheduledExecutorService bufferProcessor;
 	private InternetStatus internetStatus;
-	private ServiceConnection serviceConnection;
+//	private ServiceConnection serviceConnection;
 	private Thread internetStatusCheckerThread;
 	private static final int BUFFER_INTERVAL_MILLIS = 5;
+	private WebSocketRecognitionService webSocketRecognitionService;
+
 
 	@Override
 	protected void onStart() {
@@ -251,20 +250,23 @@ public class NoteActivity extends AppCompatActivity {
 	}
 
 	private void initService() {
-		bindService(new Intent(this, InsecureStempolRpcSpeechService.class), getServiceConnection(), BIND_AUTO_CREATE);
+		webSocketRecognitionService = new WebSocketRecognitionService(UUID.randomUUID().toString(),null);
+
+//		bindService(new Intent(this, InsecureStempolRpcSpeechService.class), getServiceConnection(), BIND_AUTO_CREATE);
 	}
 	private void stopService(){
-		unbindService(serviceConnection);
+		webSocketRecognitionService.disconnect();
+//		unbindService(serviceConnection);
 	}
 
 
-	public interface RecyclerViewClickListener {
-		public void onItemClicked(String multimediaID);
+//	public interface RecyclerViewClickListener {
+//		public void onItemClicked(String multimediaID);
+//
+//	}
 
-	}
-
-	private RecyclerViewClickListener getRecyclerViewClickListener() {
-		RecyclerViewClickListener retval = new RecyclerViewClickListener() {
+	private NoteActivity.RecyclerViewClickListener getRecyclerViewClickListener() {
+		NoteActivity.RecyclerViewClickListener retval = new NoteActivity.RecyclerViewClickListener() {
 			@Override
 			public void onItemClicked(String multimediaID) {
 				openFoto(multimediaID);
@@ -283,14 +285,14 @@ public class NoteActivity extends AppCompatActivity {
 
 		@Override
 		public void onVoiceStart() {
-			if (speechService != null) {
-				speechService.startRecognizing(voiceRecorder.getSampleRate());
-			}
+//			if (speechService != null) {
+//				speechService.startRecognizing(voiceRecorder.getSampleRate());
+//			}
 		}
 
 		@Override
 		public void onVoice(final byte[] data, final int size) {
-			if (speechService != null) {
+			if (webSocketRecognitionService != null) {
 				//TODO RUUD HIER
 				processVoice(data, size);
 //				speechService.recognize(data, size);
@@ -306,9 +308,9 @@ public class NoteActivity extends AppCompatActivity {
 
 		@Override
 		public void onVoiceEnd() {
-			if (speechService != null) {
-				speechService.finishRecognizing();
-			}
+//			if (speechService != null) {
+//				speechService.finishRecognizing();
+//			}
 		}
 
 	};
@@ -330,23 +332,23 @@ public class NoteActivity extends AppCompatActivity {
 		return maxHeard;
 	}
 
-	private ServiceConnection getServiceConnection() {
-		serviceConnection = new ServiceConnection() {
-
-			@Override
-			public void onServiceConnected(ComponentName componentName, IBinder binder) {
-				speechService = InsecureStempolRpcSpeechService.from(binder);
-				speechService.addListener(mSpeechServiceListener);
-			}
-
-			@Override
-			public void onServiceDisconnected(ComponentName componentName) {
-				speechService.finishRecognizing();
-				speechService = null;
-			}
-		};
-		return serviceConnection;
-	}
+//	private ServiceConnection getServiceConnection() {
+//		serviceConnection = new ServiceConnection() {
+//
+//			@Override
+//			public void onServiceConnected(ComponentName componentName, IBinder binder) {
+//				speechService = InsecureStempolRpcSpeechService.from(binder);
+//				speechService.addListener(mSpeechServiceListener);
+//			}
+//
+//			@Override
+//			public void onServiceDisconnected(ComponentName componentName) {
+//				speechService.finishRecognizing();
+//				speechService = null;
+//			}
+//		};
+//		return serviceConnection;
+//	}
 
 //	private final ServiceConnection serviceConnection = new ServiceConnection() {
 //
@@ -603,9 +605,7 @@ public class NoteActivity extends AppCompatActivity {
 		}
 		visualizerView.setVisibility(View.GONE);
 		nonFinalText.setVisibility(View.GONE);
-		if (speechService != null) {
-			speechService.finishRecognizing();
-		}
+
 	}
 
 	//NotNull
@@ -777,17 +777,24 @@ public class NoteActivity extends AppCompatActivity {
 
 		scheduler.scheduleAtFixedRate(new Runnable() {
 			public void run() {
+
 				//Nu online en geen rammellende verbinding = doorgaan
 				if (internetStatus == InternetStatus.ONLINE_HAD_DISCONNECTS || internetStatus == InternetStatus.ONLINE_NO_DISCONNECTS) {
+
 					if (internetStatus == InternetStatus.ONLINE_HAD_DISCONNECTS) {
 
-						speechService.startRecognizing(voiceRecorder.getSampleRate());
+//						speechService.startRecognizing(voiceRecorder.getSampleRate());
 					}
+//					Log.e("ba",""+audioBuffer.size());
+//					Log.e("ba",""+bufferAtPosition);
 					if (audioBuffer.size() >= (bufferAtPosition + 1)) {
+
 						byte[] audio = audioBuffer.get(bufferAtPosition).getData();
 						int audioSize = audioBuffer.get(bufferAtPosition).getSize();
 						bufferAtPosition++;
-						speechService.recognize(audio, audioSize);
+//						Log.e("ba","sending...");
+						webSocketRecognitionService.send(webSocketRecognitionService.mWebSocket, audio);
+//						speechService.recognize(audio, audioSize);
 					}
 					//Momenteel offline, maar verbidning heeft gewerkt. Laat audio maar in buffer en probeer het nogmaals als verbinding weer terug is
 					//Doe nu dus niets

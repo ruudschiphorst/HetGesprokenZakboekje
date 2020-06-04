@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
 		settings = getSharedPreferences(PreferencesActivity.PREFS_ZAKBOEKJE, 0);
 		httpRequestHelper = new HttpRequestHelper(settings);
-
+		ensureUniqueId();
 
 	}
 
@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void openNoteActivity(String note) {
 
-		Intent intent = new Intent(this, NoteActivity.class);
+		Intent intent = new Intent(this, NoteActivityWebsock.class);
 		intent.putExtra(EXTRA_MESSAGE, note);
 		startActivityForResult(intent, NOTE_ACTIVITY_RESULT);
 
@@ -446,10 +446,29 @@ public class MainActivity extends AppCompatActivity {
 		httpRequestHelper.getNotesFromServer(endpoint, listener);
 	}
 
+	private void ensureUniqueId() {
+		String uniqueId = settings.getString(PreferencesActivity.PREFS_UNIQUE_ID,"");
+		String contentId = settings.getString(PreferencesActivity.PREFS_CONTENT_ID,"");
+
+		//Zorg dat er een unique ID is voor dit apparaat
+		if(uniqueId.equalsIgnoreCase("")){
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putString(PreferencesActivity.PREFS_UNIQUE_ID, UUID.randomUUID().toString());
+			editor.commit();
+		}
+
+		if(contentId.equalsIgnoreCase("")){
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putString(PreferencesActivity.PREFS_CONTENT_ID, UUID.randomUUID().toString());
+			editor.commit();
+		}
+	}
+
 	private ScheduledExecutorService getTokenRefresher() {
 
 		String username = settings.getString(PreferencesActivity.PREFS_USERNAME, "");
 		String password = settings.getString(PreferencesActivity.PREFS_PASS, "");
+
 
 		//Geen username + pass = prompt gebruiker
 		if (username.equalsIgnoreCase("") || password.equalsIgnoreCase("")) {
@@ -529,6 +548,9 @@ public class MainActivity extends AppCompatActivity {
 
 			@Override
 			public void onFailure(Call call, IOException e) {
+				//Als er net weer verbinding is, dan kan hij niets resolven:
+				//Hij moet eerst de DNS records verversen. Opnieuw verbinding maken kan daarom falen
+				//Als dat zo is, probeer het dan gewoon opnieuw
 				initWithInternet();
 			}
 

@@ -26,6 +26,9 @@
         <activity android:name=".NoteActivity"
             android:parentActivityName=".MainActivity"
 			android:launchMode="singleTop"/>
+		<activity android:name=".NoteActivityWebsock"
+			android:parentActivityName=".MainActivity"
+			android:launchMode="singleTop"/>
 		<service android:name=".InsecureStempolRpcSpeechService" />
 		<activity android:name=".PreferencesActivity" />
 		<activity android:name=".PictureActivity"

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkInfo;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
@@ -17,10 +18,15 @@ public class InternetStatusChecker implements Runnable{
 	private boolean internetFailed = false;
 	private Context context;               //Ik moet een context hebben, anders kan ik de status niet ophalen
 	private List<InternetStatusCheckerListener> listeners = Lists.newArrayList();
-	private boolean firstRun=true;
+	private String callingName="empty";
 
 	public InternetStatusChecker(Context context) {
 		this.context = context;
+
+	}
+	public InternetStatusChecker(Context context, String callingName) {
+		this.context = context;
+		this.callingName = callingName;
 
 	}
 
@@ -91,7 +97,6 @@ public class InternetStatusChecker implements Runnable{
 				haveConnectedMobile = false;
 			}
 		}
-
 		if(haveConnectedWifi || haveConnectedMobile) {
 			return true;
 		}else{

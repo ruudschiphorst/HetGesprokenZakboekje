@@ -6,6 +6,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.text.TextUtils;
+import android.util.Log;
 //import android.util.Log;
 
 import com.google.cloud.speech.v1.RecognitionAudio;
@@ -24,7 +25,9 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.grpc.ManagedChannel;
@@ -41,7 +44,7 @@ public class InsecureStempolRpcSpeechService extends Service {
     private static Handler handler;
     private final SpeechBinder binder = new SpeechBinder();
     private SpeechGrpc.SpeechStub api;
-    private boolean internetFailed=false;
+//    private boolean internetFailed=false;
     private final ArrayList<InsecureRpcSpeechServiceListener> listeners = new ArrayList<>();
     private StreamObserver<StreamingRecognizeRequest> requestObserver;
 
@@ -222,18 +225,17 @@ public class InsecureStempolRpcSpeechService extends Service {
      * @param sampleRate The sample rate of the audio.
      */
     public void startRecognizing(int sampleRate) {
-//        Log.d(TAG, "StartRecog");
 
-        if(internetFailed) {
-            return;
-        }
+//        if(internetFailed) {
+//            return;
+//        }
 
         for(InsecureRpcSpeechServiceListener listener :listeners){
             listener.onReadyForSpeech();
         }
 
         if (api == null) {
-//            Log.w(TAG, "API not ready. Ignoring the request.");
+            Log.w(TAG, "API not ready. Ignoring the request.");
             return;
         }
         // Configure the API
@@ -261,8 +263,8 @@ public class InsecureStempolRpcSpeechService extends Service {
      * @param size The number of elements that are actually relevant in the {@code data}.
      */
     public void recognize(byte[] data, int size) {
-
-        if (requestObserver == null || internetFailed) {
+//		Log.e("sdasd", "gaat verzenden");
+        if (requestObserver == null) {
             return;
         }
 

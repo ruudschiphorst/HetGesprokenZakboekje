@@ -64,7 +64,8 @@ public class NoteActivity extends AppCompatActivity {
 	private TextView title = null;
 	private TextView textView = null;
 	private TextView nonFinalText = null;
-	private InsecureStempolRpcSpeechService speechService;
+//	private InsecureStempolRpcSpeechService speechService;
+	private AbstractSpeechService speechService;
 	private VoiceRecorder voiceRecorder;
 	private List<Multimedia> noteMultimedia;// = new ArrayList<Multimedia>();
 	private NoteRecyclerViewAdapter adapter;
@@ -250,11 +251,24 @@ public class NoteActivity extends AppCompatActivity {
 		return false;
 	}
 
+	private boolean useGrpc(){
+		//TODO
+		return true;
+	}
+
 	private void initService() {
-		bindService(new Intent(this, InsecureStempolRpcSpeechService.class), getServiceConnection(), BIND_AUTO_CREATE);
+		if(useGrpc()){
+			bindService(new Intent(this, InsecureStempolRpcSpeechService.class), getServiceConnection(), BIND_AUTO_CREATE);
+		}else{
+			this.speechService = new WebSocketRecognitionService(UUID.randomUUID().toString());
+		}
 	}
 	private void stopService(){
-		unbindService(serviceConnection);
+		if(useGrpc()){
+			unbindService(serviceConnection);
+		}else{
+			speechService.stop();
+		}
 	}
 
 
@@ -364,8 +378,8 @@ public class NoteActivity extends AppCompatActivity {
 //
 //	};
 
-	private final InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener mSpeechServiceListener =
-			new InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener() {
+	private final SpeechRecognitionListener mSpeechServiceListener =
+			new SpeechRecognitionListener() {
 				@Override
 				public void onStartListening() {
 
@@ -384,28 +398,7 @@ public class NoteActivity extends AppCompatActivity {
 				@Override
 				public void onSpeechRecognized(String text, boolean isFinal, boolean fromUpload) {
 
-					if(text==null){
-						return;
-					}
-					//Unk kan overal in de tekst voorkomen. Haal dit er uit.
-					text = text.replace("<unk>", "").trim();
-
-					//Er worden automatisch spaties en punten geplot. Dit klopt niet altijd, zeker als er <unk>s in het resultaat zitten.
-					//Sloop de "verkeerde" spaties er uit
-					while (text.contains(" .")) {
-						text = text.replace(" .", ".");
-					}
-					while (text.contains("  ")) {
-						text = text.replace("  ", " ");
-					}
-					//Zorg er wel voor dat we niet de hele string kwijt zijn. Dan hoeft ie niets te doen.
-					//Het kan voorkomen dat na trimmen en alle <unk>'s er uit halen, er alleen een punt overblijft. Dat willen we ook niet, dus <= 1
-					if (text.length() <= 1) {
-						return;
-					}
-
-
-					final String preparedText = text;
+					final String preparedText = SpeechResultCleaner.cleanResult(text);
 					if (isFinal) {
 
 						runOnUiThread(new Runnable() {

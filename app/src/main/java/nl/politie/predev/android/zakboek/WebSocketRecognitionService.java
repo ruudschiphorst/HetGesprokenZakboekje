@@ -41,7 +41,7 @@ import android.util.Pair;
 /**
  * Implements RecognitionService, connects to the server via WebSocket.
  */
-public class WebSocketRecognitionService  {
+public class WebSocketRecognitionService  implements AbstractSpeechService{
 
     // When does the chunk sending start and what is its interval
     private static final int TASK_DELAY_SEND = 100;
@@ -76,13 +76,10 @@ public class WebSocketRecognitionService  {
 	private static final String PARAMETER_SEPARATOR = "&";
 	private static final String NAME_VALUE_SEPARATOR = "=";
     private int mNumBytesSent;
-	private InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener insecureRpcSpeechServiceListener;
+	private EncodedAudioRecorder encodedAudioRecorder;
+	private int sampleRate;
 
-    public WebSocketRecognitionService(String contentID, InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener insecureRpcSpeechServiceListener ){
-		this.insecureRpcSpeechServiceListener = insecureRpcSpeechServiceListener;
-		if(this.insecureRpcSpeechServiceListener == null){
-			this.insecureRpcSpeechServiceListener = getDefaultListener();
-		}
+    public WebSocketRecognitionService(String contentID ){
     	configure(contentID);
 
 	}
@@ -90,6 +87,7 @@ public class WebSocketRecognitionService  {
 //    @Override
     protected void configure(String contentID)  {
 		mUrl = "wss://stempol.nl:82/speech" + getWsArgs() + getQueryParams("UTF-8", contentID);
+		Log.e("bla", mUrl);
         boolean isUnlimitedDuration = true;
         configureHandler(isUnlimitedDuration, true);
         connect();
@@ -127,7 +125,7 @@ public class WebSocketRecognitionService  {
 //    }
 
     protected void configureHandler(boolean isUnlimitedDuration, boolean isPartialResults) {
-        mMyHandler = new MyHandler(this, isUnlimitedDuration, isPartialResults, this.insecureRpcSpeechServiceListener);
+        mMyHandler = new MyHandler(this, isUnlimitedDuration, isPartialResults, listeners);
     }
 
     private void handleResult(String text) {
@@ -156,7 +154,6 @@ public class WebSocketRecognitionService  {
         AsyncHttpClient.getDefaultInstance().websocket(url, PROTOCOL, new AsyncHttpClient.WebSocketConnectCallback() {
             @Override
             public void onCompleted(Exception ex, final WebSocket webSocket) {
-            	Log.e("bla", "setting socket...");
                 mWebSocket = webSocket;
 
                 if (ex != null) {
@@ -175,8 +172,10 @@ public class WebSocketRecognitionService  {
                     @Override
                     public void onCompleted(Exception ex) {
                         if (ex == null) {
-//                            Log.e("ClosedCallback");
-							insecureRpcSpeechServiceListener.onSpeechEnd();
+                            Log.e("bla","ClosedCallback");
+                            for(SpeechRecognitionListener listener : listeners){
+								listener.onSpeechEnd();
+							}
 //                            handleFinish(mIsEosSent);
                         } else {
 //                            Log.e("ClosedCallback: ", ex);
@@ -189,8 +188,10 @@ public class WebSocketRecognitionService  {
                     @Override
                     public void onCompleted(Exception ex) {
                         if (ex == null) {
-//                            Log.e("EndCallback");
-							insecureRpcSpeechServiceListener.onSpeechEnd();
+                            Log.e("bla","EndCallback");
+							for(SpeechRecognitionListener listener : listeners){
+								listener.onSpeechEnd();
+							}
 //                            handleFinish(mIsEosSent);
                         } else {
 //                            Log.e("EndCallback: ", ex);
@@ -206,99 +207,118 @@ public class WebSocketRecognitionService  {
 
 
 
+    private void startSending(final WebSocket webSocket) {
+        mNumBytesSent = 0;
+        HandlerThread thread = new HandlerThread("WsSendHandlerThread", Process.THREAD_PRIORITY_BACKGROUND);
+        thread.start();
+        mSendLooper = thread.getLooper();
+        mSendHandler = new Handler(mSendLooper);
 
-//    private void sendEOD(final WebSocket webSocket) {
-//        try {
-//            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-//            SharedPreferences.Editor editor = prefs.edit();
-//            editor.remove("sendEOD");
-//            editor.apply();
-//
-//            ByteArrayOutputStream oS = new ByteArrayOutputStream();
-//            oS.write(EOD.getBytes());
-//            oS.write(prefs.getString("content-id-last", "Error No Content ID").getBytes());
-//            send(webSocket, oS.toByteArray());
-//
-////            Log.i("EOD sent: " + oS.toString());
-//        } catch (Exception e) {
-////            Log.i("Error sending EOD: " + e.getMessage());
-//        }
-//    }
-
-//    private void startSending(final WebSocket webSocket) {
-//        mNumBytesSent = 0;
-//        HandlerThread thread = new HandlerThread("WsSendHandlerThread", Process.THREAD_PRIORITY_BACKGROUND);
-//        thread.start();
-//        mSendLooper = thread.getLooper();
-//        mSendHandler = new Handler(mSendLooper);
-//
-//        // Send chunks to the server
-//        mSendRunnable = new Runnable() {
-//            public void run() {
-//                if (webSocket != null && webSocket.isOpen()) {
-//                    /* SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-//                    if (prefs.getBoolean("sendEOD", false)) {
-//                        sendEOD(webSocket);
-//                    } */
-//                    AudioRecorder recorder = getRecorder();
-//                    if (recorder == null || recorder.getState() != AudioRecorder.State.RECORDING) {
-////                        Log.i("Sending: EOS (recorder == null)");
-//                        webSocket.send(EOS);
-//                        mIsEosSent = true;
-//                    } else {
-//                        byte[] buffer = recorder.consumeRecordingAndTruncate();
-//                        if (recorder instanceof EncodedAudioRecorder) {
-//                            send(webSocket, ((EncodedAudioRecorder) recorder).consumeRecordingEncAndTruncate());
-//                        } else {
-//                            send(webSocket, buffer);
-//                        }
-//                        if (buffer.length > 0) {
+        // Send chunks to the server
+        mSendRunnable = new Runnable() {
+            public void run() {
+                if (webSocket != null && webSocket.isOpen()) {
+                    /* SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                    if (prefs.getBoolean("sendEOD", false)) {
+                        sendEOD(webSocket);
+                    } */
+                    AudioRecorder recorder = getAudioRecorder();
+                    if (recorder == null || recorder.getState() != AudioRecorder.State.RECORDING) {
+//                        Log.i("Sending: EOS (recorder == null)");
+                        webSocket.send(EOS);
+                        mIsEosSent = true;
+                    } else {
+                        byte[] buffer = recorder.consumeRecordingAndTruncate();
+                        if (recorder instanceof EncodedAudioRecorder) {
+                            send(webSocket, ((EncodedAudioRecorder) recorder).consumeRecordingEncAndTruncate());
+                        } else {
+                            send(webSocket, buffer);
+                        }
+                        if (buffer.length > 0) {
 //                            onBufferReceived(buffer);
-//                        }
-//                        boolean success = mSendHandler.postDelayed(this, TASK_INTERVAL_SEND);
-//                        if (!success) {
-////                            Log.i("mSendHandler.postDelayed returned false");
-//                        }
-//                    }
-//                }
-//            }
-//        };
-//
-//        mSendHandler.postDelayed(mSendRunnable, TASK_DELAY_SEND);
-//    }
+                        }
+                        boolean success = mSendHandler.postDelayed(this, TASK_INTERVAL_SEND);
+                        if (!success) {
+//                            Log.i("mSendHandler.postDelayed returned false");
+                        }
+                    }
+                }
+            }
+        };
+
+        mSendHandler.postDelayed(mSendRunnable, TASK_DELAY_SEND);
+    }
+
+
 
     public void send(final WebSocket webSocket, final byte[] buffer) {
 
-//    	if(mWebSocket == null){
-//    		return;
-//		}
+    	if(mWebSocket == null){
+    		return;
+		}
 
     	Thread thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				if (buffer != null && buffer.length > 0) {
-//					mWebSocket.send(buffer);
 					webSocket.send(buffer);
 					mNumBytesSent += buffer.length;
-//            Log.i("Sent bytes: " + buffer.length);
 				}
 			}
 		});
 		thread.start();
     }
 
+	@Override
+	public void recognize(byte[] data, int size) {
+		send(this.mWebSocket,data);
+	}
 
-    private static class MyHandler extends Handler {
+	@Override
+	public void startRecognizing(int sampleRate) {
+		this.sampleRate = sampleRate;
+	}
+
+	@Override
+	public void finishRecognizing() {
+		for (SpeechRecognitionListener listener : listeners) {
+			listener.onSpeechEnd();
+		}
+	}
+
+	@Override
+	public void addListener(SpeechRecognitionListener listener) {
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeListeners() {
+		for(SpeechRecognitionListener listener: listeners){
+			try{
+				listeners.remove(listener);
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	@Override
+	public void stop(){
+    	disconnect();
+	}
+
+	private static class MyHandler extends Handler {
         private final WeakReference<WebSocketRecognitionService> mRef;
         private final boolean mIsUnlimitedDuration;
         private final boolean mIsPartialResults;
-        private InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener insecureRpcSpeechServiceListener;
+        private final List<SpeechRecognitionListener> listeners;
 
-        public MyHandler(WebSocketRecognitionService c, boolean isUnlimitedDuration, boolean isPartialResults,InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener insecureRpcSpeechServiceListener ) {
+        public MyHandler(WebSocketRecognitionService c, boolean isUnlimitedDuration, boolean isPartialResults,List<SpeechRecognitionListener> listeners ) {
             mRef = new WeakReference<>(c);
             mIsUnlimitedDuration = isUnlimitedDuration;
             mIsPartialResults = isPartialResults;
-            this.insecureRpcSpeechServiceListener = insecureRpcSpeechServiceListener;
+            this.listeners = listeners;
         }
 
         @Override
@@ -308,10 +328,15 @@ public class WebSocketRecognitionService  {
                 if (msg.what == MSG_ERROR) {
                     Exception e = (Exception) msg.obj;
                     if (e instanceof TimeoutException) {
-                    	insecureRpcSpeechServiceListener.onError("timeout");
+                    	for(SpeechRecognitionListener listener:listeners){
+                    		listener.onError("timeout");
+						}
 //                        outerClass.onError(SpeechRecognizer.ERROR_NETWORK_TIMEOUT);
                     } else {
-						insecureRpcSpeechServiceListener.onError(e.getMessage());
+						for(SpeechRecognitionListener listener:listeners){
+							listener.onError(e.getMessage());
+						}
+
 //                        outerClass.onError(SpeechRecognizer.ERROR_NETWORK);
                     }
                 } else if (msg.what == MSG_RESULT) {
@@ -324,20 +349,27 @@ public class WebSocketRecognitionService  {
                                 ArrayList<String> hypotheses = responseResult.getHypotheses(MAX_HYPOTHESES, PRETTY_PRINT);
                                 if (hypotheses.isEmpty()) {
 //                                    Log.i("Empty final result (" + hypotheses + "), stopping");
-									insecureRpcSpeechServiceListener.onError("timeout");
+
+									for(SpeechRecognitionListener listener:listeners){
+										listener.onError("timeout");
+									}
 //                                    outerClass.onError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT);
                                 } else {
                                     // We stop listening unless the caller explicitly asks us to carry on,
                                     // by setting EXTRA_UNLIMITED_DURATION=true
                                     if (mIsUnlimitedDuration) {
-                                    	insecureRpcSpeechServiceListener.onSpeechRecognized(hypotheses.get(0),true,false);
+										for(SpeechRecognitionListener listener:listeners){
+											listener.onSpeechRecognized(hypotheses.get(0),true,false);
+										}
 										Log.e("bla", hypotheses.get(0));
 //                                        outerClass.onPartialResults(toResultsBundle(hypotheses, true));
                                     } else {
                                         outerClass.mIsEosSent = true;
 										Log.e("bla", hypotheses.get(0));
-                                        insecureRpcSpeechServiceListener.onSpeechRecognized(hypotheses.get(0), true, false);
-                                        insecureRpcSpeechServiceListener.onSpeechEnd();
+										for(SpeechRecognitionListener listener:listeners){
+											listener.onSpeechRecognized(hypotheses.get(0), true, false);
+											listener.onSpeechEnd();
+										}
 //                                        outerClass.onEndOfSpeech();
 //                                        outerClass.onResults(toResultsBundle(hypotheses, true));
                                     }
@@ -349,7 +381,10 @@ public class WebSocketRecognitionService  {
                                     if (hypotheses.isEmpty()) {
 //                                        Log.i("Empty non-final result (" + hypotheses + "), ignoring");
                                     } else {
-										insecureRpcSpeechServiceListener.onSpeechRecognized(hypotheses.get(0), false, false);
+										for(SpeechRecognitionListener listener:listeners){
+											listener.onSpeechRecognized(hypotheses.get(0), false, false);
+											listener.onSpeechEnd();
+										}
 										Log.e("bla", hypotheses.get(0));
 //                                        outerClass.onPartialResults(toResultsBundle(hypotheses, false));
                                     }
@@ -380,7 +415,7 @@ public class WebSocketRecognitionService  {
     }
 
 	private String getWsArgs() {
-		return "?content-type=audio/flac,+layout=(string)interleaved,+rate=(int)16000,+format=(string)S16LE,+channels=(int)1";
+		return "?content-type=audio/x-raw,+layout=(string)interleaved,+rate=(int)"+ this.sampleRate +",+format=(string)S16LE,+channels=(int)1";
 	}
 
 	public static String getQueryParams(String encoding, String contentId)   {
@@ -450,37 +485,12 @@ public class WebSocketRecognitionService  {
 		return result.toString();
 	}
 
-	private InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener getDefaultListener(){
-    	return new InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener() {
-			@Override
-			public void onStartListening() {
-				Log.e("DEFAULT_LISTENER","startListening");
-			}
-
-			@Override
-			public void onReadyForSpeech() {
-				Log.e("DEFAULT_LISTENER","readyForSpeech");
-			}
-
-			@Override
-			public void onSpeechStarted() {
-				Log.e("DEFAULT_LISTENER","speechStarted");
-			}
-
-			@Override
-			public void onSpeechRecognized(String text, boolean isFinal, boolean fromUpload) {
-				Log.e("DEFAULT_LISTENER","Recognized: " + text);
-			}
-
-			@Override
-			public void onSpeechEnd() {
-				Log.e("DEFAULT_LISTENER","speechEnd");
-			}
-
-			@Override
-			public void onError(String message) {
-				Log.e("DEFAULT_LISTENER","Error: " + message);
-			}
-		};
+	private EncodedAudioRecorder getAudioRecorder(){
+    	if(encodedAudioRecorder == null){
+			EncodedAudioRecorder audioRecorder = new EncodedAudioRecorder(64000,"audio/x-flac");
+			encodedAudioRecorder = audioRecorder;
+    	}
+    	return  encodedAudioRecorder;
 	}
+
 }

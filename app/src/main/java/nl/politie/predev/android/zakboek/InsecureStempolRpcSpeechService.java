@@ -35,7 +35,7 @@ import io.grpc.internal.DnsNameResolverProvider;
 import io.grpc.okhttp.OkHttpChannelProvider;
 import io.grpc.stub.StreamObserver;
 
-public class InsecureStempolRpcSpeechService extends Service {
+public class InsecureStempolRpcSpeechService extends Service implements AbstractSpeechService {
 
     private static final String TAG = "StempolRpcSpeechService";
 
@@ -45,7 +45,7 @@ public class InsecureStempolRpcSpeechService extends Service {
     private final SpeechBinder binder = new SpeechBinder();
     private SpeechGrpc.SpeechStub api;
 //    private boolean internetFailed=false;
-    private final ArrayList<InsecureRpcSpeechServiceListener> listeners = new ArrayList<>();
+//    private final ArrayList<SpeechRecognitionListener> listeners = new ArrayList<>();
     private StreamObserver<StreamingRecognizeRequest> requestObserver;
 
     //Ontvangt de responses van de spraakherkenningsservers voor streaming requests
@@ -73,7 +73,7 @@ public class InsecureStempolRpcSpeechService extends Service {
                         }
                     }
                     //Geef alle abonnees een event
-                    for(InsecureRpcSpeechServiceListener listener : listeners){
+                    for(SpeechRecognitionListener listener : listeners){
 
                         listener.onSpeechRecognized(text, isFinal, false);
                     }
@@ -92,7 +92,7 @@ public class InsecureStempolRpcSpeechService extends Service {
         @Override
         public void onCompleted() {
 //            Log.d(TAG, "API completed.");
-            for (InsecureRpcSpeechServiceListener listener : listeners) {
+            for (SpeechRecognitionListener listener : listeners) {
                 listener.onSpeechEnd();
             }
         }
@@ -117,7 +117,7 @@ public class InsecureStempolRpcSpeechService extends Service {
             }
             if (text != null) {
 
-                for (InsecureRpcSpeechServiceListener listener : listeners) {
+                for (SpeechRecognitionListener listener : listeners) {
                     listener.onSpeechRecognized(text, true, true);
                 }
 
@@ -126,7 +126,7 @@ public class InsecureStempolRpcSpeechService extends Service {
 
         @Override
         public void onError(Throwable t) {
-			for (InsecureRpcSpeechServiceListener listener : listeners) {
+			for (SpeechRecognitionListener listener : listeners) {
 				listener.onError("Fout bij aanroepen STeMPol: " + t.getMessage());
 			}
 //            Log.e(TAG, "Error calling the API.", t);
@@ -150,7 +150,7 @@ public class InsecureStempolRpcSpeechService extends Service {
         super.onCreate();
         handler = new Handler();
         initApi();
-        for(InsecureRpcSpeechServiceListener listener : listeners) {
+        for(SpeechRecognitionListener listener : listeners) {
             listener.onStartListening();
         }
 
@@ -206,12 +206,14 @@ public class InsecureStempolRpcSpeechService extends Service {
     public IBinder onBind(Intent intent) {
         return binder;
     }
-    public void addListener(InsecureRpcSpeechServiceListener listener) {
+
+    @Override
+    public void addListener(SpeechRecognitionListener listener) {
         listeners.add(listener);
     }
-
+	@Override
     public void removeListeners() {
-        for(InsecureRpcSpeechServiceListener listener: listeners){
+        for(SpeechRecognitionListener listener: listeners){
             try{
                 listeners.remove(listener);
             }catch (Exception e){
@@ -224,13 +226,14 @@ public class InsecureStempolRpcSpeechService extends Service {
      *
      * @param sampleRate The sample rate of the audio.
      */
+	@Override
     public void startRecognizing(int sampleRate) {
 
 //        if(internetFailed) {
 //            return;
 //        }
 
-        for(InsecureRpcSpeechServiceListener listener :listeners){
+        for(SpeechRecognitionListener listener :listeners){
             listener.onReadyForSpeech();
         }
 
@@ -262,13 +265,14 @@ public class InsecureStempolRpcSpeechService extends Service {
      * @param data The audio data.
      * @param size The number of elements that are actually relevant in the {@code data}.
      */
+	@Override
     public void recognize(byte[] data, int size) {
 //		Log.e("sdasd", "gaat verzenden");
         if (requestObserver == null) {
             return;
         }
 
-        for(InsecureRpcSpeechServiceListener listener : listeners) {
+        for(SpeechRecognitionListener listener : listeners) {
             listener.onSpeechStarted();
         }
 
@@ -281,13 +285,14 @@ public class InsecureStempolRpcSpeechService extends Service {
     /**
      * Finishes recognizing speech audio.
      */
+	@Override
     public void finishRecognizing() {
         if (requestObserver == null) {
             return;
         }
         requestObserver.onCompleted();
         requestObserver = null;
-        for (InsecureRpcSpeechServiceListener listener : listeners) {
+        for (SpeechRecognitionListener listener : listeners) {
             listener.onSpeechEnd();
         }
     }
@@ -313,9 +318,12 @@ public class InsecureStempolRpcSpeechService extends Service {
                             .build(),
                     fileResponseObserver);
         } catch (IOException e) {
-//            Log.e(TAG, "Error loading the input", e);
         }
     }
+    @Override
+	public void stop(){
+    	//niets te doen hier
+	}
 
 
     private class SpeechBinder extends Binder {
@@ -325,20 +333,5 @@ public class InsecureStempolRpcSpeechService extends Service {
         }
 
     }
-	public interface InsecureRpcSpeechServiceListener {
-
-		//We beginnen met luisteren
-		void onStartListening();
-		//We zijn klaar om te ontvangen
-		void onReadyForSpeech();
-		//Men is aan het praten
-		void onSpeechStarted();
-		//Er komt herkende tekst terug
-		void onSpeechRecognized(String text, boolean isFinal, boolean fromUpload);
-		//Er wordt geen spraak meer gehoord
-		void onSpeechEnd();
-		//Er wordt een error gegooid
-		void onError(String message);
-	}
 
 }

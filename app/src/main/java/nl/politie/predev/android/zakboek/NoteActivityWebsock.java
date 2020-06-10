@@ -79,7 +79,7 @@ public class NoteActivityWebsock extends AppCompatActivity {
 	private int bufferAtPosition = 0;
 	private ScheduledExecutorService bufferProcessor;
 	private InternetStatus internetStatus;
-//	private ServiceConnection serviceConnection;
+
 	private Thread internetStatusCheckerThread;
 	private static final int BUFFER_INTERVAL_MILLIS = 5;
 	private WebSocketRecognitionService webSocketRecognitionService;
@@ -250,7 +250,7 @@ public class NoteActivityWebsock extends AppCompatActivity {
 	}
 
 	private void initService() {
-		webSocketRecognitionService = new WebSocketRecognitionService(UUID.randomUUID().toString(),null);
+		webSocketRecognitionService = new WebSocketRecognitionService(UUID.randomUUID().toString());
 
 //		bindService(new Intent(this, InsecureStempolRpcSpeechService.class), getServiceConnection(), BIND_AUTO_CREATE);
 	}
@@ -366,8 +366,8 @@ public class NoteActivityWebsock extends AppCompatActivity {
 //
 //	};
 
-	private final InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener mSpeechServiceListener =
-			new InsecureStempolRpcSpeechService.InsecureRpcSpeechServiceListener() {
+	private final SpeechRecognitionListener mSpeechServiceListener =
+			new SpeechRecognitionListener() {
 				@Override
 				public void onStartListening() {
 
@@ -421,6 +421,7 @@ public class NoteActivityWebsock extends AppCompatActivity {
 									plottedText = existingText + " " + preparedText + " ";
 								}
 								textView.setText(plottedText);
+
 								nonFinalText.setText("");
 							}
 						});

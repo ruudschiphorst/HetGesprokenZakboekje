@@ -253,16 +253,21 @@ public class NoteActivity extends AppCompatActivity {
 
 	private boolean useGrpc(){
 		//TODO
-		return true;
+		if(settings.getString(PreferencesActivity.PREFS_CONNECTION_METHOD, getString(R.string.connection_method_grpc)).equalsIgnoreCase(getString(R.string.connection_method_grpc))) {
+			return true;
+		}
+		return false;
 	}
 
 	private void initService() {
 		if(useGrpc()){
 			bindService(new Intent(this, InsecureStempolRpcSpeechService.class), getServiceConnection(), BIND_AUTO_CREATE);
 		}else{
-			this.speechService = new WebSocketRecognitionService(UUID.randomUUID().toString());
+			this.speechService = new WebSocketRecognitionService(UUID.randomUUID().toString(), 16000);
+			this.speechService.addListener(mSpeechServiceListener);
 		}
 	}
+
 	private void stopService(){
 		if(useGrpc()){
 			unbindService(serviceConnection);
@@ -361,22 +366,6 @@ public class NoteActivity extends AppCompatActivity {
 		};
 		return serviceConnection;
 	}
-
-//	private final ServiceConnection serviceConnection = new ServiceConnection() {
-//
-//		@Override
-//		public void onServiceConnected(ComponentName componentName, IBinder binder) {
-//			speechService = InsecureStempolRpcSpeechService.from(binder);
-//			speechService.addListener(mSpeechServiceListener);
-//		}
-//
-//		@Override
-//		public void onServiceDisconnected(ComponentName componentName) {
-//			speechService.finishRecognizing();
-//			speechService = null;
-//		}
-//
-//	};
 
 	private final SpeechRecognitionListener mSpeechServiceListener =
 			new SpeechRecognitionListener() {

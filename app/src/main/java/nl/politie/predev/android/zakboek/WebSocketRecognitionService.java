@@ -79,13 +79,14 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 	private EncodedAudioRecorder encodedAudioRecorder;
 	private int sampleRate;
 
-    public WebSocketRecognitionService(String contentID ){
-    	configure(contentID);
+    public WebSocketRecognitionService(String contentID, int sampleRate ){
+    	configure(contentID, sampleRate);
 
 	}
 
 //    @Override
-    protected void configure(String contentID)  {
+    protected void configure(String contentID, int sampleRate)  {
+    	this.sampleRate = sampleRate;
 		mUrl = "wss://stempol.nl:82/speech" + getWsArgs() + getQueryParams("UTF-8", contentID);
 		Log.e("bla", mUrl);
         boolean isUnlimitedDuration = true;
@@ -129,6 +130,7 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
     }
 
     private void handleResult(String text) {
+    	Log.e("sda", "hnd "+ text);
         Message msg = new Message();
         msg.what = MSG_RESULT;
         msg.obj = text;
@@ -136,6 +138,7 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
     }
 
     private void handleException(Exception error) {
+    	Log.e("fsd", error.getMessage());
         Message msg = new Message();
         msg.what = MSG_ERROR;
         msg.obj = error;
@@ -252,11 +255,9 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 
 
     public void send(final WebSocket webSocket, final byte[] buffer) {
-
     	if(mWebSocket == null){
     		return;
 		}
-
     	Thread thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -323,7 +324,9 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 
         @Override
         public void handleMessage(Message msg) {
+        	Log.e("ds","handling " );
             WebSocketRecognitionService outerClass = mRef.get();
+			Log.e("ds","null? " + (outerClass==null) );
             if (outerClass != null) {
                 if (msg.what == MSG_ERROR) {
                     Exception e = (Exception) msg.obj;
@@ -405,6 +408,7 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 //                            outerClass.onError(SpeechRecognizer.ERROR_CLIENT);
                         }
                     } catch (WebSocketResponse.WebSocketResponseException e) {
+                    	Log.e("dad", e.getMessage());
                         // This results from a syntactically incorrect server response object
 //                        Log.e((String) msg.obj, e);
 //                        outerClass.onError(SpeechRecognizer.ERROR_SERVER);

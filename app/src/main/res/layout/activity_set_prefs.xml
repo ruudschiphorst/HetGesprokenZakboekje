@@ -61,6 +61,18 @@
 		android:ems="10"
 		android:inputType="textUri" />
 
+	<TextView
+		android:id="@+id/textView4"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/connection_method" />
+
+	<Spinner
+		android:id="@+id/activity_connection_method"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:gravity="right" />
+
 	<Button
 		android:id="@+id/activity_creds_ok"
 		android:layout_width="match_parent"

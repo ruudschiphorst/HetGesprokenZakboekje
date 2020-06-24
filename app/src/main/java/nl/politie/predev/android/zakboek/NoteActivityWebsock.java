@@ -250,7 +250,7 @@ public class NoteActivityWebsock extends AppCompatActivity {
 	}
 
 	private void initService() {
-		webSocketRecognitionService = new WebSocketRecognitionService(UUID.randomUUID().toString());
+		webSocketRecognitionService = new WebSocketRecognitionService(UUID.randomUUID().toString(),16000);
 
 //		bindService(new Intent(this, InsecureStempolRpcSpeechService.class), getServiceConnection(), BIND_AUTO_CREATE);
 	}

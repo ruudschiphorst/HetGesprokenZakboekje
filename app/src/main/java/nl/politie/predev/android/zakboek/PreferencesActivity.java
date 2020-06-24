@@ -4,12 +4,16 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.protobuf.Internal;
 
 import java.io.IOException;
 
@@ -28,6 +32,7 @@ public class PreferencesActivity extends AppCompatActivity {
 	private EditText url_db;
 	private EditText url_auth;
 	private Button ok;
+	private Spinner spinner;
 	public static final String PREFS_ZAKBOEKJE = "gesproken_zakboekje_creds";
 	public static final String PREFS_USERNAME = "username";
 	public static final String PREFS_PASS = "passwd";
@@ -35,6 +40,7 @@ public class PreferencesActivity extends AppCompatActivity {
 	public static final String PREFS_URL_DB = "db_url";
 	public static final String PREFS_UNIQUE_ID = "unique_id";
 	public static final String PREFS_CONTENT_ID = "content_id";
+	public static final String PREFS_CONNECTION_METHOD = "connection_method"; //grpc of websockets
 	public static final String DEFAULT_BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
 	public static final String DEFAULT_BASE_HTTPS_URL_AUTH_API = "https://stempolextras.westeurope.cloudapp.azure.com:8085/api/auth/generatetoken";
 	private SharedPreferences settings;
@@ -50,11 +56,25 @@ public class PreferencesActivity extends AppCompatActivity {
 		url_auth = findViewById(R.id.activity_creds_auth);
 		ok = findViewById(R.id.activity_creds_ok);
 
+		//Spinner populeren
+		spinner = findViewById(R.id.activity_connection_method);
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+				R.array.connection_methods, android.R.layout.simple_spinner_item);
+
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner.setAdapter(adapter);
+
 		settings = getSharedPreferences(PREFS_ZAKBOEKJE, 0);
 		username.setText(settings.getString(PREFS_USERNAME, "").toString());
 		password.setText(settings.getString(PREFS_PASS, "").toString());
 		url_db.setText(settings.getString(PREFS_URL_DB, DEFAULT_BASE_HTTPS_URL_DB_API));
 		url_auth.setText(settings.getString(PREFS_URL_AUTH, DEFAULT_BASE_HTTPS_URL_AUTH_API));
+
+		if(settings.getString(PREFS_CONNECTION_METHOD,getString(R.string.connection_method_grpc)).equalsIgnoreCase(getString(R.string.connection_method_grpc))){
+			spinner.setSelection(0);
+		}else{
+			spinner.setSelection(1);
+		}
 
 		ok.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -105,6 +125,11 @@ public class PreferencesActivity extends AppCompatActivity {
 					editor.putString(PREFS_PASS, enteredPassword);
 					editor.putString(PREFS_URL_AUTH, enteredAuthURL);
 					editor.putString(PREFS_URL_DB, enteredDbURL);
+					if(spinner.getSelectedItemPosition()  ==0){
+						editor.putString(PREFS_CONNECTION_METHOD, getString(R.string.connection_method_grpc));
+					}else{
+						editor.putString(PREFS_CONNECTION_METHOD,getString(R.string.connection_method_websocket));
+					}
 					editor.commit();
 					finish();
 				}else{

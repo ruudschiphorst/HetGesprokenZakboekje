@@ -17,4 +17,7 @@
 	<string name="no">Nee</string>
 	<string name="previous_versions">Vorige versies</string>
 	<string name="no_interwebs">Geen internetverbinding!</string>
+	<string name="connection_method">Verbinding type</string>
+	<string name="connection_method_grpc">gRPC</string>
+	<string name="connection_method_websocket">Websocket</string>
 </resources>

@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void openNoteActivity(String note) {
 
-		Intent intent = new Intent(this, NoteActivityWebsock.class);
+		Intent intent = new Intent(this, NoteActivity.class);
 		intent.putExtra(EXTRA_MESSAGE, note);
 		startActivityForResult(intent, NOTE_ACTIVITY_RESULT);
 

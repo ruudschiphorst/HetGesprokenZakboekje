@@ -51,5 +51,11 @@
     <color name="dialog_cancel_bgcolor">#dd3300</color>
     <color name="dialog_ok_bgcolor">#0099dd</color>
 
+	<color name="textFormatBlack">#000000</color>
+	<color name="textFormatRed">#e8000d</color>
+	<color name="textFormatBlue">#1c39bb</color>
+	<color name="textFormatGreen">#32cd32</color>
+	<color name="textFormatYellow">#e6e200</color>
+	<color name="textFormatWhite">#EEEEEE</color>
 
 </resources>

@@ -130,7 +130,6 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
     }
 
     private void handleResult(String text) {
-    	Log.e("sda", "hnd "+ text);
         Message msg = new Message();
         msg.what = MSG_RESULT;
         msg.obj = text;
@@ -138,7 +137,6 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
     }
 
     private void handleException(Exception error) {
-    	Log.e("fsd", error.getMessage());
         Message msg = new Message();
         msg.what = MSG_ERROR;
         msg.obj = error;
@@ -282,6 +280,10 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 
 	@Override
 	public void finishRecognizing() {
+		if(this.mWebSocket !=null && this.mWebSocket.isOpen()){
+			mWebSocket.send(EOS);
+		}
+
 		for (SpeechRecognitionListener listener : listeners) {
 			listener.onSpeechEnd();
 		}
@@ -324,9 +326,7 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 
         @Override
         public void handleMessage(Message msg) {
-        	Log.e("ds","handling " );
             WebSocketRecognitionService outerClass = mRef.get();
-			Log.e("ds","null? " + (outerClass==null) );
             if (outerClass != null) {
                 if (msg.what == MSG_ERROR) {
                     Exception e = (Exception) msg.obj;
@@ -368,7 +368,6 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 //                                        outerClass.onPartialResults(toResultsBundle(hypotheses, true));
                                     } else {
                                         outerClass.mIsEosSent = true;
-										Log.e("bla", hypotheses.get(0));
 										for(SpeechRecognitionListener listener:listeners){
 											listener.onSpeechRecognized(hypotheses.get(0), true, false);
 											listener.onSpeechEnd();
@@ -388,7 +387,6 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 											listener.onSpeechRecognized(hypotheses.get(0), false, false);
 											listener.onSpeechEnd();
 										}
-										Log.e("bla", hypotheses.get(0));
 //                                        outerClass.onPartialResults(toResultsBundle(hypotheses, false));
                                     }
                                 }
@@ -408,7 +406,6 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 //                            outerClass.onError(SpeechRecognizer.ERROR_CLIENT);
                         }
                     } catch (WebSocketResponse.WebSocketResponseException e) {
-                    	Log.e("dad", e.getMessage());
                         // This results from a syntactically incorrect server response object
 //                        Log.e((String) msg.obj, e);
 //                        outerClass.onError(SpeechRecognizer.ERROR_SERVER);

@@ -6,6 +6,9 @@
 	<string name="owner">Eigenaar</string>
 	<string name="created_by">Aangemaakt door</string>
 	<string name="created_at">Aangemaakt op</string>
+	<string name="draw_options">Opties voor tekenen</string>
+	<string name="brush_color">Kleur van kwast</string>
+	<string name="brush_size">Grootte van kwast</string>
 	<string name="authorizations">Autorisaties</string>
 	<string name="saving_in_progress">Bezig met opslaan...</string>
 	<string name="username">Gebruikersnaam</string>

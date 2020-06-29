@@ -7,6 +7,13 @@
 	android:layout_height="match_parent"
 	android:orientation="vertical">
 
+	<nl.politie.predev.android.zakboek.DrawingView
+		android:id="@+id/drawing"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="@android:color/transparent" />
+
+
 	<EditText
 		android:id="@+id/note_tv_title"
 		android:layout_width="0dp"
@@ -113,5 +120,7 @@
 		android:textSize="16sp"
 		app:layout_constraintBottom_toBottomOf="parent"
 		app:layout_constraintStart_toStartOf="parent" />
+	<include layout="@layout/content_text_format" />
+	<include layout="@layout/content_draw_panel" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

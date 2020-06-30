@@ -46,10 +46,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -73,7 +70,6 @@ public class NoteActivity extends AppCompatActivity {
 	private TextView title = null;
 	private TextView textView = null;
 	private TextView nonFinalText = null;
-//	private InsecureStempolRpcSpeechService speechService;
 	private AbstractSpeechService speechService;
 	private VoiceRecorder voiceRecorder;
 	private List<Multimedia> noteMultimedia;// = new ArrayList<Multimedia>();
@@ -96,7 +92,6 @@ public class NoteActivity extends AppCompatActivity {
 	private Thread internetStatusCheckerThread;
 	private static final int BUFFER_INTERVAL_MILLIS = 5;
 	private boolean isDrawModeOn;
-	private boolean isTextModeOn;
 	private DrawingView drawingView;
 	private static final float
 			SMALL_BRUSH = 5,
@@ -326,7 +321,6 @@ public class NoteActivity extends AppCompatActivity {
 
 	private void setDrawModeOn(boolean isOn) {
 		isDrawModeOn = isOn;
-		isTextModeOn = !isOn;
 	}
 
 	public interface RecyclerViewClickListener {
@@ -495,7 +489,7 @@ public class NoteActivity extends AppCompatActivity {
 		nonFinalText = findViewById(R.id.note_tv_nonfinal_text);
 		drawingView =findViewById(R.id.drawing);
 
-		mDrawLayout = (LinearLayout) findViewById(R.id.drawPanelSlider);
+		mDrawLayout = findViewById(R.id.drawPanelSlider);
 		ViewGroup.LayoutParams paramsDrawPanel = mDrawLayout.getLayoutParams();
 		paramsDrawPanel.height = calculateMenuMargin();
 
@@ -523,7 +517,7 @@ public class NoteActivity extends AppCompatActivity {
 			}
 		});
 
-		recyclerView = (RecyclerView) findViewById(R.id.note_recycler_view);
+		recyclerView = findViewById(R.id.note_recycler_view);
 		recyclerView.setHasFixedSize(true);
 
 		layoutManager = new LinearLayoutManager(this);
@@ -819,7 +813,7 @@ public class NoteActivity extends AppCompatActivity {
 			finish();
 		}
 
-		if(n == null) {
+		if(n.getTitle() == null || n.getNote_text() == null || n==null) {
 			Toast.makeText(this,"Er is een fout opgetreden bij het ophalen van de notitie. Probeer het nogmaals.", Toast.LENGTH_SHORT).show();
 			finish();
 		}

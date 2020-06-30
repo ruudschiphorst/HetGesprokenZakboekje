@@ -2,9 +2,12 @@ package nl.politie.predev.android.zakboek;
 
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -14,9 +17,15 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Display;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -86,6 +95,15 @@ public class NoteActivity extends AppCompatActivity {
 	private ServiceConnection serviceConnection;
 	private Thread internetStatusCheckerThread;
 	private static final int BUFFER_INTERVAL_MILLIS = 5;
+	private boolean isDrawModeOn;
+	private boolean isTextModeOn;
+	private DrawingView drawingView;
+	private static final float
+			SMALL_BRUSH = 5,
+			MEDIUM_BRUSH = 10,
+			LARGE_BRUSH = 20;
+	private LinearLayout mDrawLayout;
+	private static final double MENU_MARGIN_RELATIVE_MODIFIER = 0.3;
 
 	@Override
 	protected void onStart() {
@@ -276,6 +294,40 @@ public class NoteActivity extends AppCompatActivity {
 		}
 	}
 
+	public void toggleDrawMenu() {
+
+		View formatTextSliderView = findViewById(R.id.formatTextSlider);
+		View drawPanelSliderView = findViewById(R.id.drawPanelSlider);
+
+		if (drawPanelSliderView.getVisibility() == View.VISIBLE) {
+			drawPanelSliderView.setVisibility(View.GONE);
+		} else {
+			if (formatTextSliderView.getVisibility() == View.VISIBLE) {
+				formatTextSliderView.setVisibility(View.GONE);
+			}
+			hideSoftKeyboard();
+			drawPanelSliderView.setVisibility(View.VISIBLE);
+		}
+
+		// After changes:
+		setDrawModeOn(drawPanelSliderView.getVisibility() == View.VISIBLE);
+	}
+
+	private void hideSoftKeyboard() {
+		if (this.getCurrentFocus() != null) {
+			try {
+				InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(this.getCurrentFocus().getApplicationWindowToken(), 0);
+			} catch (RuntimeException e) {
+				//ignore
+			}
+		}
+	}
+
+	private void setDrawModeOn(boolean isOn) {
+		isDrawModeOn = isOn;
+		isTextModeOn = !isOn;
+	}
 
 	public interface RecyclerViewClickListener {
 		public void onItemClicked(String multimediaID);
@@ -441,6 +493,11 @@ public class NoteActivity extends AppCompatActivity {
 		title = findViewById(R.id.note_tv_title);
 		textView = findViewById(R.id.note_tv_text);
 		nonFinalText = findViewById(R.id.note_tv_nonfinal_text);
+		drawingView =findViewById(R.id.drawing);
+
+		mDrawLayout = (LinearLayout) findViewById(R.id.drawPanelSlider);
+		ViewGroup.LayoutParams paramsDrawPanel = mDrawLayout.getLayoutParams();
+		paramsDrawPanel.height = calculateMenuMargin();
 
 		final ImageButton ibMic = findViewById(R.id.note_btn_mic);
 
@@ -490,6 +547,14 @@ public class NoteActivity extends AppCompatActivity {
 			}
 		});
 
+		FloatingActionButton fabDrawMenu = findViewById(R.id.note_fab_draw);
+		fabDrawMenu.setOnClickListener(new View.OnClickListener() {
+		   @Override
+		   public void onClick(View view) {
+				toggleDrawMenu();
+		   }
+	    });
+
 		textView.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -504,6 +569,19 @@ public class NoteActivity extends AppCompatActivity {
 			@Override
 			public void afterTextChanged(Editable editable) {
 				dirty = true;
+			}
+		});
+
+		textView.setOnTouchListener(new View.OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if (isDrawModeOn) {
+					drawingView.draw(event.getX() + textView.getX(), event.getY() + textView.getY(), event.getAction());
+					return true;
+				} else {
+					return false;
+				}
 			}
 		});
 
@@ -738,7 +816,11 @@ public class NoteActivity extends AppCompatActivity {
 			}
 			adapter.updateData(noteMultimedia);
 		} catch (Exception e) {
-//			Log.e("Err", "Error", e);
+			finish();
+		}
+
+		if(n == null) {
+			Toast.makeText(this,"Er is een fout opgetreden bij het ophalen van de notitie. Probeer het nogmaals.", Toast.LENGTH_SHORT).show();
 			finish();
 		}
 
@@ -831,5 +913,57 @@ public class NoteActivity extends AppCompatActivity {
 		public void setSize(int size) {
 			this.size = size;
 		}
+	}
+	/**
+	 * Method used to change drawing color
+	 */
+	public void changeColor(View v) {
+
+		if (v.getTag().toString().equals("black")) {
+			drawingView.setPaintColor(Color.BLACK);
+		} else if (v.getTag().toString().equals("red")) {
+			drawingView.setPaintColor(Color.RED);
+		} else if (v.getTag().toString().equals("blue")) {
+			drawingView.setPaintColor(Color.BLUE);
+		} else if (v.getTag().toString().equals("green")) {
+			drawingView.setPaintColor(Color.GREEN);
+		} else if (v.getTag().toString().equals("yellow")) {
+			drawingView.setPaintColor(Color.YELLOW);
+		}
+	}
+
+	/**
+	 * Method used to change brush size
+	 */
+	public void changeBrushSize(View v) {
+
+		if (v.getTag().toString().equals("small")) {
+			drawingView.setBrushSize(SMALL_BRUSH);
+		} else if (v.getTag().toString().equals("medium")) {
+			drawingView.setBrushSize(MEDIUM_BRUSH);
+		} else if (v.getTag().toString().equals("large")) {
+			drawingView.setBrushSize(LARGE_BRUSH);
+		}
+	}
+
+	/**
+	 * Method used to change erase mode
+	 * Handled by erase and paint button
+	 */
+	public void eraseOrPaintMode(View v) {
+		drawingView.setErase(v.getTag().toString().equals("erase"));
+	}
+
+	public void wipeCanvas(View v) {
+		drawingView.startNew();
+	}
+
+	private int calculateMenuMargin() {
+		WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+		Display display = wm.getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+		int height = size.y;
+		return (int) Math.round(height * MENU_MARGIN_RELATIVE_MODIFIER);
 	}
 }

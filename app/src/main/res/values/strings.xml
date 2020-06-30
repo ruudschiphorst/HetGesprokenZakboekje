@@ -7,8 +7,8 @@
 	<string name="created_by">Aangemaakt door</string>
 	<string name="created_at">Aangemaakt op</string>
 	<string name="draw_options">Opties voor tekenen</string>
-	<string name="brush_color">Kleur van kwast</string>
-	<string name="brush_size">Grootte van kwast</string>
+	<string name="brush_color">Penceel kleur</string>
+	<string name="brush_size">Penceel grootte</string>
 	<string name="text_color">Tekstkleur</string>
 	<string name="style">Stijl</string>
 	<string name="authorizations">Autorisaties</string>

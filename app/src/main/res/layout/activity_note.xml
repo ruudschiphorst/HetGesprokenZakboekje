@@ -88,15 +88,27 @@
 		app:borderWidth="0dp"/>
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/note_fab_draw"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:backgroundTint="@color/very_transparent"
+		android:clickable="true"
+		app:borderWidth="0dp"
+		app:layout_constraintBottom_toTopOf="@id/visualizer"
+		app:layout_constraintEnd_toStartOf="@id/note_fab_camera"
+		app:srcCompat="@drawable/brush1" />
+
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/note_fab_details"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:backgroundTint="@color/very_transparent"
 		android:clickable="true"
 		app:layout_constraintBottom_toTopOf="@id/visualizer"
-		app:layout_constraintEnd_toStartOf="@id/note_fab_camera"
+		app:layout_constraintEnd_toStartOf="@id/note_fab_draw"
 		app:srcCompat="@android:drawable/ic_menu_preferences"
 		app:borderWidth="0dp"/>
+
 
 
 

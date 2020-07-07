@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.net.Uri;
@@ -38,8 +39,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -571,6 +575,7 @@ public class NoteActivity extends AppCompatActivity {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if (isDrawModeOn) {
+					dirty = true;
 					drawingView.draw(event.getX() + textView.getX(), event.getY() + textView.getY(), event.getAction());
 					return true;
 				} else {
@@ -624,6 +629,8 @@ public class NoteActivity extends AppCompatActivity {
 		n.setGenerated_at(null);
 		//Ook laten genereren
 		n.setId(null);
+		processDrawingforSaving();
+
 		if (noteMultimedia.size() > 0) {
 			n.setMultimedia(noteMultimedia);
 		}
@@ -813,7 +820,7 @@ public class NoteActivity extends AppCompatActivity {
 			finish();
 		}
 
-		if(n.getTitle() == null || n.getNote_text() == null || n==null) {
+		if(n==null || n.getTitle() == null || n.getNote_text() == null ) {
 			Toast.makeText(this,"Er is een fout opgetreden bij het ophalen van de notitie. Probeer het nogmaals.", Toast.LENGTH_SHORT).show();
 			finish();
 		}
@@ -885,6 +892,24 @@ public class NoteActivity extends AppCompatActivity {
 		};
 
 		httpRequestHelper.getHealth(listener);
+	}
+
+	private void processDrawingforSaving(){
+		Bitmap drawing = drawingView.getCanvasBitmap();
+		Bitmap blankDrawing = Bitmap.createBitmap(drawing.getWidth(), drawing.getHeight(), drawing.getConfig());
+		if(drawing.sameAs(blankDrawing)){
+			return;
+		}
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		drawing.compress(Bitmap.CompressFormat.JPEG,100,baos);
+		byte[] asBytes = baos.toByteArray();
+
+		Multimedia multimedia = new Multimedia();
+		multimedia.setContent(Base64.getEncoder().encodeToString(asBytes));
+		multimedia.setThumbnailContent(multimedia.getContent());
+		noteMultimedia.add(multimedia);
+
 	}
 
 	private class AudioContent {

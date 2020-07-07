@@ -30,6 +30,7 @@ public class DrawingView extends View {
     //erase mode
     private boolean erase;
 
+
     public DrawingView(Context context, AttributeSet attrs){
         super(context, attrs);
         setupDrawing();
@@ -60,6 +61,7 @@ public class DrawingView extends View {
         if (canvasBitmap == null) {
             canvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             drawCanvas = new Canvas(canvasBitmap);
+			drawCanvas.drawColor(Color.WHITE);
         }
         else {
             canvasBitmap = Bitmap.createBitmap(canvasBitmap);

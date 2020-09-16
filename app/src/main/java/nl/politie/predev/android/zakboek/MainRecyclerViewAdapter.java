@@ -25,11 +25,6 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 	// Create new views (invoked by the layout manager)
 	@Override
 	public MainRecyclerViewAdapter.MainRecyclerViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
-		// create a new view
-//
-//		TextView v = (TextView) LayoutInflater.from(parent.getContext())
-//				.inflate(R.layout.main_recyclerview_textview, parent, false);
-//		MainRecyclerViewHolder vh = new MainRecyclerViewHolder(v);
 
 		View view = LayoutInflater.from(parent.getContext())
 				.inflate(R.layout.main_recyclerview_extensive, parent, false);

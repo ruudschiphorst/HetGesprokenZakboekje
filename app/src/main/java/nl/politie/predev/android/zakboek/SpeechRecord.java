@@ -62,13 +62,11 @@ public class SpeechRecord extends AudioRecord {
         super(audioSource, sampleRateInHz, channelConfig, audioFormat, bufferSizeInBytes);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-//            Log.i("Trying to enhance audio because running on SDK " + Build.VERSION.SDK_INT);
 
             int audioSessionId = getAudioSessionId();
 
             if (noise && NoiseSuppressor.isAvailable()) {
                 if (NoiseSuppressor.create(audioSessionId) == null) {
-//                    Log.i("NoiseSuppressor: failed");
                 } else {
 //                    Log.i("NoiseSuppressor: ON");
                 }

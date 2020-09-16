@@ -7,7 +7,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
-//import android.util.Log;
 
 import com.google.cloud.speech.v1.RecognitionAudio;
 import com.google.cloud.speech.v1.RecognitionConfig;
@@ -24,16 +23,14 @@ import com.google.protobuf.ByteString;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.grpc.ManagedChannel;
 import io.grpc.internal.DnsNameResolverProvider;
 import io.grpc.okhttp.OkHttpChannelProvider;
 import io.grpc.stub.StreamObserver;
+
 
 public class InsecureStempolRpcSpeechService extends Service implements AbstractSpeechService {
 
@@ -44,8 +41,6 @@ public class InsecureStempolRpcSpeechService extends Service implements Abstract
     private static Handler handler;
     private final SpeechBinder binder = new SpeechBinder();
     private SpeechGrpc.SpeechStub api;
-//    private boolean internetFailed=false;
-//    private final ArrayList<SpeechRecognitionListener> listeners = new ArrayList<>();
     private StreamObserver<StreamingRecognizeRequest> requestObserver;
 
     //Ontvangt de responses van de spraakherkenningsservers voor streaming requests
@@ -60,7 +55,6 @@ public class InsecureStempolRpcSpeechService extends Service implements Abstract
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-//                    Log.i(TAG, "onNext started.");
 
                     String text = null;
                     boolean isFinal = false;
@@ -77,7 +71,6 @@ public class InsecureStempolRpcSpeechService extends Service implements Abstract
 
                         listener.onSpeechRecognized(text, isFinal, false);
                     }
-//                    Log.d(TAG, "onNext completed.");
                 }
             });
             thread.start();
@@ -86,12 +79,10 @@ public class InsecureStempolRpcSpeechService extends Service implements Abstract
 
         @Override
         public void onError(Throwable t) {
-//            Log.e(TAG, "Error calling the API. " + t.getMessage(), t);
         }
 
         @Override
         public void onCompleted() {
-//            Log.d(TAG, "API completed.");
             for (SpeechRecognitionListener listener : listeners) {
                 listener.onSpeechEnd();
             }
@@ -129,12 +120,10 @@ public class InsecureStempolRpcSpeechService extends Service implements Abstract
 			for (SpeechRecognitionListener listener : listeners) {
 				listener.onError("Fout bij aanroepen STeMPol: " + t.getMessage());
 			}
-//            Log.e(TAG, "Error calling the API.", t);
         }
 
         @Override
         public void onCompleted() {
-//            Log.d(TAG, "API completed.");
         }
 
     };
@@ -170,7 +159,6 @@ public class InsecureStempolRpcSpeechService extends Service implements Abstract
                 try {
                     channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
-//                    Log.e(TAG, "Error shutting down the gRPC channel.", e);
                 }
             }
             api = null;
@@ -229,10 +217,6 @@ public class InsecureStempolRpcSpeechService extends Service implements Abstract
 	@Override
     public void startRecognizing(int sampleRate) {
 
-//        if(internetFailed) {
-//            return;
-//        }
-
         for(SpeechRecognitionListener listener :listeners){
             listener.onReadyForSpeech();
         }
@@ -267,7 +251,6 @@ public class InsecureStempolRpcSpeechService extends Service implements Abstract
      */
 	@Override
     public void recognize(byte[] data, int size) {
-//		Log.e("sdasd", "gaat verzenden");
         if (requestObserver == null) {
             return;
         }

@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
-//import android.util.Log;
+import android.util.Log;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
@@ -17,19 +17,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
 
-import nl.politie.predev.android.zakboek.model.AccesTokenRequest;
 import nl.politie.predev.android.zakboek.model.Multimedia;
 import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class PictureActivity extends AppCompatActivity {
 
-	private static final String BASE_HTTPS_URL_DB_API = "https://stempolextras.westeurope.cloudapp.azure.com:8086/";
+public class PictureActivity extends AppCompatActivity {
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -103,14 +96,13 @@ public class PictureActivity extends AppCompatActivity {
 	}
 
 	private void setImage(String multimedia){
-//		Log.e("dada", multimedia);
 		try{
 			ObjectMapper om = new ObjectMapper();
 			Multimedia multimediaObject = om.readValue(multimedia, Multimedia.class);
 			byte[] imageData = Base64.getDecoder().decode(multimediaObject.getContent());
 			setImage(imageData);
 		} catch (Exception e) {
-//			Log.e("asfasf", e.getMessage());
+			Log.e("Error", e.getMessage());
 		}
 	}
 }

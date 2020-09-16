@@ -95,11 +95,9 @@ public abstract class AbstractAudioRecorder implements AudioRecorder {
         if (minBufferSizeInBytes == SpeechRecord.ERROR_BAD_VALUE) {
             throw new IllegalArgumentException("SpeechRecord.getMinBufferSize: parameters not supported by hardware");
         } else if (minBufferSizeInBytes == SpeechRecord.ERROR) {
-//            Log.e("SpeechRecord.getMinBufferSize: unable to query hardware for output properties");
             minBufferSizeInBytes = mSampleRate * (120 / 1000) * RESOLUTION_IN_BYTES * CHANNELS;
         }
         int bufferSize = BUFFER_SIZE_MULTIPLIER * minBufferSizeInBytes;
-//        Log.i("SpeechRecord buffer size: " + bufferSize + ", min size = " + minBufferSizeInBytes);
         return bufferSize;
     }
 
@@ -134,19 +132,14 @@ public abstract class AbstractAudioRecorder implements AudioRecorder {
      * If it gets full (status == -5) then the recording is stopped.
      */
     protected int getStatus(int numOfBytes, int len) {
-//        Log.i("Read bytes: request/actual: " + len + "/" + numOfBytes);
         if (numOfBytes < 0) {
-//            Log.e("AudioRecord error: " + numOfBytes);
             return numOfBytes;
         }
         if (numOfBytes > len) {
-//            Log.e("Read more bytes than is buffer length:" + numOfBytes + ": " + len);
             return -100;
         } else if (numOfBytes == 0) {
-//            Log.e("Read zero bytes");
             return -200;
         } else if (mRecording.length < mRecordedLength + numOfBytes) {
-//            Log.e("Recorder buffer overflow: " + mRecordedLength);
             return -300;
         }
         return 0;
@@ -228,7 +221,6 @@ public abstract class AbstractAudioRecorder implements AudioRecorder {
 
             // increment the recorded session id in case that the consume pointer was crossed
             if (isConsumePointerCrossed(reachedTheEndOfRecordingBuffer, numOfBytes)) {
-//                Log.i("recorder session changed. mRecordedLength was: " + (mRecordedLength - numOfBytes) + " and now it is: " + mRecordedLength + " while the mConsumedLength is: " + mConsumedLength);
                 markNewRecordingSession();
             }
         }

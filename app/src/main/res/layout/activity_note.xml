@@ -69,6 +69,7 @@
 		android:layout_width="75dp"
 		android:layout_height="0dp"
 		android:layout_marginBottom="8dp"
+		android:visibility="gone"
 		app:layout_constraintBottom_toBottomOf="@+id/note_tv_text"
 		app:layout_constraintBottom_toTopOf="@id/note_fab_camera"
 		app:layout_constraintEnd_toEndOf="parent"
@@ -82,10 +83,11 @@
 		android:layout_height="wrap_content"
 		android:backgroundTint="@color/very_transparent"
 		android:clickable="true"
+		android:visibility="gone"
+		app:borderWidth="0dp"
 		app:layout_constraintBottom_toTopOf="@id/visualizer"
 		app:layout_constraintEnd_toEndOf="parent"
-		app:srcCompat="@android:drawable/ic_menu_camera"
-		app:borderWidth="0dp"/>
+		app:srcCompat="@android:drawable/ic_menu_camera" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/note_fab_draw"
@@ -93,6 +95,7 @@
 		android:layout_height="wrap_content"
 		android:backgroundTint="@color/very_transparent"
 		android:clickable="true"
+		android:visibility="gone"
 		app:borderWidth="0dp"
 		app:layout_constraintBottom_toTopOf="@id/visualizer"
 		app:layout_constraintEnd_toStartOf="@id/note_fab_camera"
@@ -104,12 +107,22 @@
 		android:layout_height="wrap_content"
 		android:backgroundTint="@color/very_transparent"
 		android:clickable="true"
+		android:visibility="gone"
+		app:borderWidth="0dp"
 		app:layout_constraintBottom_toTopOf="@id/visualizer"
 		app:layout_constraintEnd_toStartOf="@id/note_fab_draw"
-		app:srcCompat="@android:drawable/ic_menu_preferences"
-		app:borderWidth="0dp"/>
+		app:srcCompat="@android:drawable/ic_menu_preferences" />
 
-
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/note_fab_mail"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:backgroundTint="@color/very_transparent"
+		android:clickable="true"
+		app:borderWidth="0dp"
+		app:layout_constraintBottom_toTopOf="@id/visualizer"
+		app:layout_constraintStart_toStartOf="parent"
+		app:srcCompat="@android:drawable/ic_dialog_email" />
 
 
 	<nl.politie.predev.android.zakboek.VisualizerView

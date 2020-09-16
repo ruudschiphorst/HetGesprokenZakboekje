@@ -61,7 +61,6 @@ public class NoteActivityWebsock extends AppCompatActivity {
 	private TextView title = null;
 	private TextView textView = null;
 	private TextView nonFinalText = null;
-//	private InsecureStempolRpcSpeechService speechService;
 	private VoiceRecorder voiceRecorder;
 	private List<Multimedia> noteMultimedia;// = new ArrayList<Multimedia>();
 	private NoteRecyclerViewAdapter adapter;
@@ -250,20 +249,14 @@ public class NoteActivityWebsock extends AppCompatActivity {
 	}
 
 	private void initService() {
-		webSocketRecognitionService = new WebSocketRecognitionService(UUID.randomUUID().toString(),16000);
+		webSocketRecognitionService = new WebSocketRecognitionService(UUID.randomUUID().toString(),16000, settings);
 
-//		bindService(new Intent(this, InsecureStempolRpcSpeechService.class), getServiceConnection(), BIND_AUTO_CREATE);
 	}
 	private void stopService(){
 		webSocketRecognitionService.disconnect();
-//		unbindService(serviceConnection);
 	}
 
 
-//	public interface RecyclerViewClickListener {
-//		public void onItemClicked(String multimediaID);
-//
-//	}
 
 	private NoteActivity.RecyclerViewClickListener getRecyclerViewClickListener() {
 		NoteActivity.RecyclerViewClickListener retval = new NoteActivity.RecyclerViewClickListener() {
@@ -295,7 +288,6 @@ public class NoteActivityWebsock extends AppCompatActivity {
 			if (webSocketRecognitionService != null) {
 				//TODO RUUD HIER
 				processVoice(data, size);
-//				speechService.recognize(data, size);
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
@@ -331,40 +323,6 @@ public class NoteActivityWebsock extends AppCompatActivity {
 		}
 		return maxHeard;
 	}
-
-//	private ServiceConnection getServiceConnection() {
-//		serviceConnection = new ServiceConnection() {
-//
-//			@Override
-//			public void onServiceConnected(ComponentName componentName, IBinder binder) {
-//				speechService = InsecureStempolRpcSpeechService.from(binder);
-//				speechService.addListener(mSpeechServiceListener);
-//			}
-//
-//			@Override
-//			public void onServiceDisconnected(ComponentName componentName) {
-//				speechService.finishRecognizing();
-//				speechService = null;
-//			}
-//		};
-//		return serviceConnection;
-//	}
-
-//	private final ServiceConnection serviceConnection = new ServiceConnection() {
-//
-//		@Override
-//		public void onServiceConnected(ComponentName componentName, IBinder binder) {
-//			speechService = InsecureStempolRpcSpeechService.from(binder);
-//			speechService.addListener(mSpeechServiceListener);
-//		}
-//
-//		@Override
-//		public void onServiceDisconnected(ComponentName componentName) {
-//			speechService.finishRecognizing();
-//			speechService = null;
-//		}
-//
-//	};
 
 	private final SpeechRecognitionListener mSpeechServiceListener =
 			new SpeechRecognitionListener() {
@@ -446,7 +404,6 @@ public class NoteActivityWebsock extends AppCompatActivity {
 					runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
-							Log.e("dada", message);
 //							Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
 						}
 					});
@@ -757,7 +714,6 @@ public class NoteActivityWebsock extends AppCompatActivity {
 			}
 			adapter.updateData(noteMultimedia);
 		} catch (Exception e) {
-//			Log.e("Err", "Error", e);
 			finish();
 		}
 
@@ -786,14 +742,11 @@ public class NoteActivityWebsock extends AppCompatActivity {
 
 //						speechService.startRecognizing(voiceRecorder.getSampleRate());
 					}
-//					Log.e("ba",""+audioBuffer.size());
-//					Log.e("ba",""+bufferAtPosition);
 					if (audioBuffer.size() >= (bufferAtPosition + 1)) {
 
 						byte[] audio = audioBuffer.get(bufferAtPosition).getData();
 						int audioSize = audioBuffer.get(bufferAtPosition).getSize();
 						bufferAtPosition++;
-//						Log.e("ba","sending...");
 						webSocketRecognitionService.send(webSocketRecognitionService.mWebSocket, audio);
 //						speechService.recognize(audio, audioSize);
 					}
@@ -820,7 +773,6 @@ public class NoteActivityWebsock extends AppCompatActivity {
 				} else {
 					internetStatus = InternetStatus.ONLINE_HAD_DISCONNECTS;
 				}
-//				initService();
 			}
 
 			@Override

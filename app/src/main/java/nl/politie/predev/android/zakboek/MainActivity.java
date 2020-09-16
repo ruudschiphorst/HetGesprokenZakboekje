@@ -249,8 +249,6 @@ public class MainActivity extends AppCompatActivity {
 //			}
 //		});
 		noInternetWarning = findViewById(R.id.activity_main_warning);
-//		loading = false;
-//		setInternetDependantVisuals();
 
 	}
 

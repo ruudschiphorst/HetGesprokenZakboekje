@@ -41,9 +41,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -137,7 +135,6 @@ public class NoteActivity extends AppCompatActivity {
 				} else {
 					internetStatus = InternetStatus.OFFLINE_BAD_CONNECTION;
 				}
-//				stopService();
 			}
 
 			@Override
@@ -280,7 +277,7 @@ public class NoteActivity extends AppCompatActivity {
 		if(useGrpc()){
 			bindService(new Intent(this, InsecureStempolRpcSpeechService.class), getServiceConnection(), BIND_AUTO_CREATE);
 		}else{
-			this.speechService = new WebSocketRecognitionService(UUID.randomUUID().toString(), 16000);
+			this.speechService = new WebSocketRecognitionService(UUID.randomUUID().toString(), 16000, settings);
 			this.speechService.addListener(mSpeechServiceListener);
 		}
 	}
@@ -475,7 +472,6 @@ public class NoteActivity extends AppCompatActivity {
 					runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
-							Log.e("dada", message);
 //							Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
 						}
 					});
@@ -584,6 +580,24 @@ public class NoteActivity extends AppCompatActivity {
 			}
 		});
 
+		FloatingActionButton fabMail = findViewById(R.id.note_fab_mail);
+		fabMail.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				if(textView.getText() !=null){
+					Intent intent = new Intent(Intent.ACTION_SENDTO);
+					intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+	//				intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"mijnadres@ergens.nl"});
+					intent.putExtra(Intent.EXTRA_SUBJECT, "Transcriptie");
+					intent.putExtra(Intent.EXTRA_TEXT, textView.getText().toString());
+					if (intent.resolveActivity(getPackageManager()) != null) {
+						startActivity(intent);
+					}
+				}
+
+			}
+		});
+
 	}
 
 	private void openNoteDetails() {
@@ -624,7 +638,7 @@ public class NoteActivity extends AppCompatActivity {
 
 		//TODO constant
 		n.setTitle(nn(title.getText().toString(), "<Geen titel>"));
-		n.setNote_text(textView.getText().toString());
+//		n.setNote_text(textView.getText().toString());
 		//Laten genereren
 		n.setGenerated_at(null);
 		//Ook laten genereren
@@ -904,7 +918,11 @@ public class NoteActivity extends AppCompatActivity {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		drawing.compress(Bitmap.CompressFormat.JPEG,100,baos);
 		byte[] asBytes = baos.toByteArray();
-
+		try{
+			baos.close();
+		}catch (IOException e){
+			Toast.makeText(this,"Error closing ByteArrayOutputStream: " + e.getMessage(), Toast.LENGTH_LONG);
+		}
 		Multimedia multimedia = new Multimedia();
 		multimedia.setContent(Base64.getEncoder().encodeToString(asBytes));
 		multimedia.setThumbnailContent(multimedia.getContent());

@@ -1,6 +1,5 @@
 package nl.politie.predev.android.zakboek;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,16 +7,12 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
-import android.preference.PreferenceManager;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
+import android.util.Pair;
 
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.WebSocket;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
@@ -25,22 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import android.util.Log;
-import android.util.Pair;
-
-//import nl.np.phon.android.speak.ChunkedWebRecSessionBuilder;
-//import nl.np.phon.android.speak.Log;
-//import nl.np.phon.android.speak.R;
-//import nl.np.phon.android.speak.utils.QueryUtils;
-//import nl.np.phon.android.speechutils.AudioRecorder;
-//import nl.np.phon.android.speechutils.EncodedAudioRecorder;
-//import nl.np.phon.android.speechutils.Extras;
-//import nl.np.phon.android.speechutils.service.AbstractRecognitionService;
-//import nl.np.phon.android.speechutils.utils.PreferenceUtils;
-
-/**
- * Implements RecognitionService, connects to the server via WebSocket.
- */
 public class WebSocketRecognitionService  implements AbstractSpeechService{
 
     // When does the chunk sending start and what is its interval
@@ -78,28 +57,26 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
     private int mNumBytesSent;
 	private EncodedAudioRecorder encodedAudioRecorder;
 	private int sampleRate;
+	private SharedPreferences settings;
 
-    public WebSocketRecognitionService(String contentID, int sampleRate ){
+    public WebSocketRecognitionService(String contentID, int sampleRate, SharedPreferences settings ){
+    	this.settings = settings;
     	configure(contentID, sampleRate);
 
 	}
 
-//    @Override
     protected void configure(String contentID, int sampleRate)  {
     	this.sampleRate = sampleRate;
 		mUrl = "wss://stempol.nl:82/speech" + getWsArgs() + getQueryParams("UTF-8", contentID);
-		Log.e("bla", mUrl);
         boolean isUnlimitedDuration = true;
         configureHandler(isUnlimitedDuration, true);
         connect();
     }
 
-//    @Override
     protected void connect() {
         startSocket(mUrl);
     }
 
-//    @Override
     protected void disconnect() {
         if (mSendHandler != null) mSendHandler.removeCallbacks(mSendRunnable);
         if (mSendLooper != null) {
@@ -111,19 +88,7 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
             mWebSocket.end(); // TODO: or close?
             mWebSocket = null;
         }
-//        Log.i("Number of bytes sent: " + mNumBytesSent);
     }
-
-//    @Override
-//    protected String getEncoderType() {
-//        return PreferenceUtils.getPrefString(getSharedPreferences(), getResources(),
-//                R.string.keyImeAudioFormat, R.string.defaultAudioFormat);
-//    }
-
-//    @Override
-//    protected boolean isAudioCues() {
-//        return PreferenceUtils.getPrefBoolean(getSharedPreferences(), getResources(), R.string.keyImeAudioCues, R.bool.defaultImeAudioCues);
-//    }
 
     protected void configureHandler(boolean isUnlimitedDuration, boolean isPartialResults) {
         mMyHandler = new MyHandler(this, isUnlimitedDuration, isPartialResults, listeners);
@@ -150,7 +115,6 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
      */
     void startSocket(String url) {
         mIsEosSent = false;
-//        Log.i(url);
 
         AsyncHttpClient.getDefaultInstance().websocket(url, PROTOCOL, new AsyncHttpClient.WebSocketConnectCallback() {
             @Override
@@ -164,7 +128,6 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 
                 webSocket.setStringCallback(new WebSocket.StringCallback() {
                     public void onStringAvailable(String s) {
-//                        Log.i(s);
                         handleResult(s);
                     }
                 });
@@ -173,13 +136,10 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
                     @Override
                     public void onCompleted(Exception ex) {
                         if (ex == null) {
-                            Log.e("bla","ClosedCallback");
                             for(SpeechRecognitionListener listener : listeners){
 								listener.onSpeechEnd();
 							}
-//                            handleFinish(mIsEosSent);
                         } else {
-//                            Log.e("ClosedCallback: ", ex);
                             handleException(ex);
                         }
                     }
@@ -189,19 +149,14 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
                     @Override
                     public void onCompleted(Exception ex) {
                         if (ex == null) {
-                            Log.e("bla","EndCallback");
 							for(SpeechRecognitionListener listener : listeners){
 								listener.onSpeechEnd();
 							}
-//                            handleFinish(mIsEosSent);
                         } else {
-//                            Log.e("EndCallback: ", ex);
                             handleException(ex);
                         }
                     }
                 });
-//				mWebSocket = webSocket;
-//                startSending(webSocket);
             }
         });
     }
@@ -219,13 +174,8 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
         mSendRunnable = new Runnable() {
             public void run() {
                 if (webSocket != null && webSocket.isOpen()) {
-                    /* SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                    if (prefs.getBoolean("sendEOD", false)) {
-                        sendEOD(webSocket);
-                    } */
                     AudioRecorder recorder = getAudioRecorder();
                     if (recorder == null || recorder.getState() != AudioRecorder.State.RECORDING) {
-//                        Log.i("Sending: EOS (recorder == null)");
                         webSocket.send(EOS);
                         mIsEosSent = true;
                     } else {
@@ -334,13 +284,10 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
                     	for(SpeechRecognitionListener listener:listeners){
                     		listener.onError("timeout");
 						}
-//                        outerClass.onError(SpeechRecognizer.ERROR_NETWORK_TIMEOUT);
                     } else {
 						for(SpeechRecognitionListener listener:listeners){
 							listener.onError(e.getMessage());
 						}
-
-//                        outerClass.onError(SpeechRecognizer.ERROR_NETWORK);
                     }
                 } else if (msg.what == MSG_RESULT) {
                     try {
@@ -351,12 +298,10 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
                             if (responseResult.isFinal()) {
                                 ArrayList<String> hypotheses = responseResult.getHypotheses(MAX_HYPOTHESES, PRETTY_PRINT);
                                 if (hypotheses.isEmpty()) {
-//                                    Log.i("Empty final result (" + hypotheses + "), stopping");
 
 									for(SpeechRecognitionListener listener:listeners){
 										listener.onError("timeout");
 									}
-//                                    outerClass.onError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT);
                                 } else {
                                     // We stop listening unless the caller explicitly asks us to carry on,
                                     // by setting EXTRA_UNLIMITED_DURATION=true
@@ -364,16 +309,12 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 										for(SpeechRecognitionListener listener:listeners){
 											listener.onSpeechRecognized(hypotheses.get(0),true,false);
 										}
-										Log.e("bla", hypotheses.get(0));
-//                                        outerClass.onPartialResults(toResultsBundle(hypotheses, true));
                                     } else {
                                         outerClass.mIsEosSent = true;
 										for(SpeechRecognitionListener listener:listeners){
 											listener.onSpeechRecognized(hypotheses.get(0), true, false);
 											listener.onSpeechEnd();
 										}
-//                                        outerClass.onEndOfSpeech();
-//                                        outerClass.onResults(toResultsBundle(hypotheses, true));
                                     }
                                 }
                             } else {
@@ -387,28 +328,38 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 											listener.onSpeechRecognized(hypotheses.get(0), false, false);
 											listener.onSpeechEnd();
 										}
-//                                        outerClass.onPartialResults(toResultsBundle(hypotheses, false));
                                     }
                                 }
                             }
                         } else if (statusCode == WebSocketResponse.STATUS_SUCCESS) {
                             // TODO: adaptation_state currently not handled
                         } else if (statusCode == WebSocketResponse.STATUS_ABORTED) {
-//                            outerClass.onError(SpeechRecognizer.ERROR_SERVER);
+							for(SpeechRecognitionListener listener:listeners){
+								listener.onError("Aborted");
+							}
                         } else if (statusCode == WebSocketResponse.STATUS_NOT_AVAILABLE) {
-//                            outerClass.onError(SpeechRecognizer.ERROR_RECOGNIZER_BUSY);
+							for(SpeechRecognitionListener listener:listeners){
+								listener.onError("Not Available");
+							}
                         } else if (statusCode == WebSocketResponse.STATUS_NO_SPEECH) {
-//                            outerClass.onError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT);
+							for(SpeechRecognitionListener listener:listeners){
+								listener.onError("No Speech");
+							}
                         } else if (statusCode == WebSocketResponse.STATUS_NO_VALID_FRAMES) {
-//                            outerClass.onError(SpeechRecognizer.ERROR_NO_MATCH);
+							for(SpeechRecognitionListener listener:listeners){
+								listener.onError("No Valid Frames");
+							}
                         } else {
+							for(SpeechRecognitionListener listener:listeners){
+								listener.onError("Client error");
+							}
                             // Server sent unsupported status code, client should be updated
-//                            outerClass.onError(SpeechRecognizer.ERROR_CLIENT);
                         }
                     } catch (WebSocketResponse.WebSocketResponseException e) {
+						for(SpeechRecognitionListener listener:listeners){
+							listener.onError(e.getMessage());
+						}
                         // This results from a syntactically incorrect server response object
-//                        Log.e((String) msg.obj, e);
-//                        outerClass.onError(SpeechRecognizer.ERROR_SERVER);
                     }
                 }
             }
@@ -419,9 +370,8 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 		return "?content-type=audio/x-raw,+layout=(string)interleaved,+rate=(int)"+ this.sampleRate +",+format=(string)S16LE,+channels=(int)1";
 	}
 
-	public static String getQueryParams(String encoding, String contentId)   {
+	private String getQueryParams(String encoding, String contentId)   {
 		List<Pair<String, String>> list = new ArrayList<>();
-//		flattenBundle("editorInfo_", list, intent.getBundleExtra(Extras.EXTRA_EDITOR_INFO));
 		flattenBundle("editorInfo_", list, null);
 		listAdd(list, "lang", "nl-NL");
 		listAdd(list, "lm", null);
@@ -430,7 +380,7 @@ public class WebSocketRecognitionService  implements AbstractSpeechService{
 		listAdd(list, "user-agent","RecognizerIntentActivity/1.6.90; HMD Global/PLE/00WW_6_19C; null/null");
 		listAdd(list, "calling-package", null);
 		// listAdd(list, "user-id", builder.getDeviceId());
-		listAdd(list, "user-id", "ruudschiphorst@gmail.com");
+		listAdd(list, "user-id", settings.getString(PreferencesActivity.PREFS_USERNAME,""));
 		listAdd(list, "location", null);
 		listAdd(list, "partial", "true");
 		listAdd(list, "content-id", contentId);

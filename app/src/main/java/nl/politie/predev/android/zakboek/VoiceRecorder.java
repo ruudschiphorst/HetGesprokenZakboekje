@@ -187,7 +187,6 @@ public class VoiceRecorder {
                         break;
                     }
                     final int size = mAudioRecord.read(mBuffer, 0, mBuffer.length);
-//					Log.e("bla", "" + size); == 1280
                     final long now = System.currentTimeMillis();
                     if (isHearingVoice(mBuffer, size)) {
                         if (mLastVoiceHeardMillis == Long.MAX_VALUE) {

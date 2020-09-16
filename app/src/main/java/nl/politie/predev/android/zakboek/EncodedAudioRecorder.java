@@ -112,36 +112,28 @@ public class EncodedAudioRecorder extends AbstractAudioRecorder {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void recorderLoop(SpeechRecord speechRecord) {
-//        Log.i("(recorderloop) encodertype: " + mEncoderType);
 
         mNumBytesSubmitted = 0;
         mNumBytesDequeued = 0;
 
-//        Log.i("Build.Version.SDK_INT" + Build.VERSION.SDK_INT);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             MediaFormat format;
             if (mEncoderType.equals("audio/x-flac")) {
                 format = MediaFormatFactory.createMediaFormat(MediaFormatFactory.Type.FLAC, getSampleRate());
-//                Log.i("(recorderloop) flactype built: " + mEncoderType);
             } else if (mEncoderType.equals("audio/mp4a-latm")) {
                 format = MediaFormatFactory.createMediaFormat(MediaFormatFactory.Type.AAC, getSampleRate());
             } else {
                 // AAC is default for encodedAudioRecorder
                 format = MediaFormatFactory.createMediaFormat(MediaFormatFactory.Type.AAC, getSampleRate());
-//                Log.i("(recorderloop) aactype built: " + mEncoderType);
             }
 
             List<String> componentNames = AudioUtils.getEncoderNamesForType(format.getString(MediaFormat.KEY_MIME));
             for (String componentName : componentNames) {
-//                Log.i("component/format: " + componentName + "/" + format);
 
                 MediaCodec codec = AudioUtils.createCodec(componentName, format);
                 if (codec != null) {
                     recorderEncoderLoop(codec, speechRecord);
-//                    if (Log.DEBUG) {
-//                        AudioUtils.showMetrics(format, mNumBytesSubmitted, mNumBytesDequeued);
-//                    }
                     break; // TODO: we use the first one that is suitable
                 }
             }
@@ -179,7 +171,6 @@ public class EncodedAudioRecorder extends AbstractAudioRecorder {
         int len = getRecordedEncLength() - startPos;
         byte[] bytes = new byte[len];
         System.arraycopy(mRecordingEnc, startPos, bytes, 0, len);
-//        Log.i("Copied from: " + startPos + ": " + bytes.length + " bytes");
         return bytes;
     }
 
@@ -234,7 +225,6 @@ public class EncodedAudioRecorder extends AbstractAudioRecorder {
     private void dequeueOutputBuffer(MediaCodec codec, ByteBuffer[] outputBuffers, int index, MediaCodec.BufferInfo info) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             ByteBuffer buffer = outputBuffers[index];
-//            Log.i("size/remaining: " + info.size + "/" + buffer.remaining());
             if (info.size <= buffer.remaining()) {
                 int outBitsSize   = info.size;
                 int outPacketSize = outBitsSize + 7;
@@ -258,11 +248,7 @@ public class EncodedAudioRecorder extends AbstractAudioRecorder {
                 //buffer.clear();
                 codec.releaseOutputBuffer(index, false);
                 addEncoded(bufferCopied);
-//                if (Log.DEBUG) {
-//                    AudioUtils.showSomeBytes("out", bufferCopied);
-//                }
             } else {
-//                Log.e("size > remaining");
                 codec.releaseOutputBuffer(index, false);
             }
         }
@@ -283,7 +269,6 @@ public class EncodedAudioRecorder extends AbstractAudioRecorder {
             // Getting some buffers (e.g. 4 of each) to communicate with the codec
             ByteBuffer[] codecInputBuffers = codec.getInputBuffers();
             ByteBuffer[] codecOutputBuffers = codec.getOutputBuffers();
-//            Log.i("input buffers " + codecInputBuffers.length + "; output buffers: " + codecOutputBuffers.length);
             boolean doneSubmittingInput = false;
             int numRetriesDequeueOutputBuffer = 0;
             int index;
@@ -295,39 +280,23 @@ public class EncodedAudioRecorder extends AbstractAudioRecorder {
                         int size = queueInputBuffer(codec, codecInputBuffers, index, speechRecord);
                         if (size == -1) {
                             codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-//                            Log.i("enc: in: EOS");
                             doneSubmittingInput = true;
                         } else {
-//                            Log.i("enc: in: " + size);
                             mNumBytesSubmitted += size;
                         }
                     } else {
-//                        Log.i("enc: in: timeout, will try again");
                     }
                 }
                 index = codec.dequeueOutputBuffer(info, DEQUEUE_TIMEOUT);
-//                Log.i("enc: out: flags/index: " + info.flags + "/" + index);
-//                Log.i("enc: out: info.size/info.offset: " + info.size + "/" + info.offset);
-                // if (info.flags == 2) {
-                //    continue;
-                // }
                 if (index == MediaCodec.INFO_TRY_AGAIN_LATER) {
-//                    Log.i("enc: out: EMPTY BUFFER ");
-                    // Log.i("enc: out: INFO_TRY_AGAIN_LATER: " + numRetriesDequeueOutputBuffer);
-                    // if (++numRetriesDequeueOutputBuffer > MAX_NUM_RETRIES_DEQUEUE_OUTPUT_BUFFER) {
-                    //    break;
-                    // }
                 } else if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                     MediaFormat format = codec.getOutputFormat();
-//                    Log.i("enc: out: INFO_OUTPUT_FORMAT_CHANGED: " + format.toString());
                 } else if (index == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
                     codecOutputBuffers = codec.getOutputBuffers();
-//                    Log.i("enc: out: INFO_OUTPUT_BUFFERS_CHANGED");
                 } else {
                     dequeueOutputBuffer(codec, codecOutputBuffers, index, info);
                     mNumBytesDequeued += info.size;
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-//                        Log.i("enc: out: EOS");
                         break;
                     }
                 }

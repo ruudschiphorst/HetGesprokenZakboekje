@@ -29,7 +29,7 @@ public class AudioUtils {
             FileUtils.writeByteArrayToFile(new File(wavFileFullPath), wav, append);
         }
         catch (IOException e) {
-//            Log.e("Could not save a recording to " + wavFileFullPath + " due to: " + e.getMessage());
+
         }
     }
 
@@ -41,7 +41,6 @@ public class AudioUtils {
             file.close();
         }
         catch(Throwable t) {
-//            Log.e("Could not write/rewrite the wav header to " + wavFileFullPath + " due to: " + t.getMessage());
         }
     }
 
@@ -148,7 +147,6 @@ public class AudioUtils {
                     // non OMX component had to be in this list for the video
                     // editor code to work... but it cannot actually be instantiated
                     // using MediaCodec.
-//                    Log.i("skipping '" + info.getName() + "'.");
                     continue;
                 }
                 String[] supportedTypes = info.getSupportedTypes();
@@ -173,9 +171,7 @@ public class AudioUtils {
                 codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
                 return codec;
             } catch (IllegalStateException e) {
-//                Log.e("codec '" + componentName + "' failed configuration.");
             } catch (IOException e) {
-//                Log.e("codec '" + componentName + "' failed configuration.");
             }
         }
         return null;
@@ -184,14 +180,12 @@ public class AudioUtils {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public static void showMetrics(MediaFormat format, int numBytesSubmitted, int numBytesDequeued) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-//            Log.i("queued a total of " + numBytesSubmitted + " bytes, " + "dequeued " + numBytesDequeued + " bytes.");
             int sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE);
             int channelCount = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
             int inBitrate = sampleRate * channelCount * 16;  // bit/sec
             int outBitrate = format.getInteger(MediaFormat.KEY_BIT_RATE);
             float desiredRatio = (float) outBitrate / (float) inBitrate;
             float actualRatio = (float) numBytesDequeued / (float) numBytesSubmitted;
-//            Log.i("desiredRatio = " + desiredRatio + ", actualRatio = " + actualRatio);
         }
     }
 
@@ -214,14 +208,12 @@ public class AudioUtils {
      * Just for testing...
      */
     public static void showSomeBytes(String tag, byte[] bytes) {
-//        Log.i("enc: " + tag + ": length: " + bytes.length);
         String str = "";
         int len = bytes.length;
         if (len > 0) {
             for (int i = 0; i < len && i < 5; i++) {
                 str += Integer.toHexString(bytes[i]) + " ";
             }
-//            Log.i("enc: " + tag + ": hex: " + str);
         }
     }
 }

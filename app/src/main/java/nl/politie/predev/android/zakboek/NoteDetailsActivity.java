@@ -111,7 +111,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
 		((LinearLayoutManager) layoutManager).setOrientation(RecyclerView.VERTICAL);
 		recyclerView.setLayoutManager(layoutManager);
 
-		recycleradapter = new MainRecyclerViewAdapter(new ArrayList<Note>(), getRecyclerViewClickListener());
+		recycleradapter = new MainRecyclerViewAdapter(new ArrayList<Note>(), getRecyclerViewClickListener(),getResources().getConfiguration().getLocales().get(0));
 		recyclerView.setAdapter(recycleradapter);
 
 		getNotesFromServer();

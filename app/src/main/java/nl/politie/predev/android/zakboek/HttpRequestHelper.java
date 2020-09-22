@@ -185,6 +185,7 @@ public class HttpRequestHelper {
 			@Override
 			public void onResponse(Call call, Response response)  {
 				listener.onResponse(call, response);
+
 			}
 		});
 	}

@@ -588,7 +588,7 @@ public class NoteActivity extends AppCompatActivity {
 					Intent intent = new Intent(Intent.ACTION_SENDTO);
 					intent.setData(Uri.parse("mailto:")); // only email apps should handle this
 	//				intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"mijnadres@ergens.nl"});
-					intent.putExtra(Intent.EXTRA_SUBJECT, "Transcriptie");
+					intent.putExtra(Intent.EXTRA_SUBJECT, "Transcriptie " + nn(title.getText().toString(),""));
 					intent.putExtra(Intent.EXTRA_TEXT, textView.getText().toString());
 					if (intent.resolveActivity(getPackageManager()) != null) {
 						startActivity(intent);
@@ -638,7 +638,7 @@ public class NoteActivity extends AppCompatActivity {
 
 		//TODO constant
 		n.setTitle(nn(title.getText().toString(), "<Geen titel>"));
-//		n.setNote_text(textView.getText().toString());
+		n.setNote_text(textView.getText().toString());
 		//Laten genereren
 		n.setGenerated_at(null);
 		//Ook laten genereren

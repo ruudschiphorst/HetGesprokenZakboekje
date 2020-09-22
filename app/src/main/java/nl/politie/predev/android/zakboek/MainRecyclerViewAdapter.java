@@ -7,7 +7,11 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import nl.politie.predev.android.zakboek.model.Note;
@@ -16,10 +20,12 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 
     private List<Note> data;
     private MainActivity.RecyclerViewClickListener recyclerViewClickListener;
+    private Locale locale;
 
-	public MainRecyclerViewAdapter(List<Note> data, MainActivity.RecyclerViewClickListener recyclerViewClickListener) {
+	public MainRecyclerViewAdapter(List<Note> data, MainActivity.RecyclerViewClickListener recyclerViewClickListener, Locale locale) {
 		this.data = data;
 		this.recyclerViewClickListener = recyclerViewClickListener;
+		this.locale = locale;
 	}
 
 	// Create new views (invoked by the layout manager)
@@ -47,7 +53,8 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 		holder.title.setText(data.get(position).getTitle());
 		holder.owner_text.setText(data.get(position).getOwner());
 		holder.created_by.setText(data.get(position).getCreated_by());
-		holder.created_at.setText(data.get(position).getGenerated_at().toString());
+		holder.created_at.setText(dateToLocaleFormattedString(data.get(position).getGenerated_at()));
+//		holder.created_at.setText(data.get(position).getGenerated_at().toString());
 
 		if(data.get(position).isIs_public()){
 			holder.is_public.setText(R.string.yes);
@@ -92,5 +99,11 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         this.data = data;
         notifyDataSetChanged();
     }
+
+    private String dateToLocaleFormattedString(Date date){
+		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE dd MMM yyyy hh:mm:ss", locale);
+		String formattedDate = dateFormat.format(date);
+		return formattedDate;
+	}
 
 }

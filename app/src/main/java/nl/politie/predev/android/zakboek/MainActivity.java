@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -164,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 		((LinearLayoutManager) layoutManager).setOrientation(RecyclerView.VERTICAL);
 		recyclerView.setLayoutManager(layoutManager);
 
-		adapter = new MainRecyclerViewAdapter(new ArrayList<Note>(), getRecyclerViewClickListener());
+		adapter = new MainRecyclerViewAdapter(new ArrayList<Note>(), getRecyclerViewClickListener(), getResources().getConfiguration().getLocales().get(0));
 		recyclerView.setAdapter(adapter);
 
 		FloatingActionButton fabAdd = findViewById(R.id.activity_main_add);
@@ -238,39 +239,9 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-//		ImageButton ib = findViewById(R.id.activity_main_search);
-//		ib.setOnClickListener(new View.OnClickListener() {
-//			@Override
-//			public void onClick(View view) {
-//				Spinner spinner = findViewById(R.id.activity_main_filters_spinner);
-//				selectedFilter = spinner.getSelectedItemPosition();
-//				setContentView(R.layout.activity_loading);
-//				getNotesFromServer();
-//			}
-//		});
 		noInternetWarning = findViewById(R.id.activity_main_warning);
 
 	}
-
-//	private void setInternetDependantVisuals() {
-//
-//		runOnUiThread(new Runnable() {
-//			@Override
-//			public void run() {
-//				if (loading) {
-//					return;
-//				}
-//				if (internetStatusChecker.haveInternet()) {
-//					noInternetWarning.setVisibility(View.GONE);
-//					filterSpinner.setEnabled(true);
-//				} else {
-//					noInternetWarning.setVisibility(View.VISIBLE);
-//					filterSpinner.setEnabled(false);
-//				}
-//			}
-//		});
-//
-//	}
 
 	private void setDeleteModeVisuals() {
 		if (deleteMode) {
@@ -346,6 +317,12 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onResponse(Call call, Response response) {
 				getNotesFromServer();
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						initViews();
+					}
+				});
 			}
 
 			@Override

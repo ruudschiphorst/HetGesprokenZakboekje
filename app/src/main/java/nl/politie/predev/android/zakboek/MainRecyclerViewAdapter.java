@@ -101,7 +101,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     }
 
     private String dateToLocaleFormattedString(Date date){
-		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE dd MMM yyyy hh:mm:ss", locale);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE dd MMM yyyy HH:mm:ss", locale);
 		String formattedDate = dateFormat.format(date);
 		return formattedDate;
 	}

@@ -57,6 +57,8 @@ public class HttpRequestHelper {
 			@Override
 			public void onResponse(Call call, Response response) {
 				listener.onResponse(call, response);
+				response.body().close();
+				response.close();
 			}
 		});
 
@@ -83,6 +85,8 @@ public class HttpRequestHelper {
 			@Override
 			public void onResponse(Call call, Response response) {
 				listener.onResponse(call, response);
+				response.body().close();
+				response.close();
 			}
 		});
 	}
@@ -109,6 +113,8 @@ public class HttpRequestHelper {
 			@Override
 			public void onResponse(Call call, Response response) {
 				listener.onResponse(call, response);
+				response.body().close();
+				response.close();
 			}
 		});
 	}
@@ -134,6 +140,8 @@ public class HttpRequestHelper {
 			@Override
 			public void onResponse(Call call, Response response)  {
 				listener.onResponse(call, response);
+				response.body().close();
+				response.close();
 			}
 		});
 	}
@@ -160,6 +168,8 @@ public class HttpRequestHelper {
 			@Override
 			public void onResponse(Call call, Response response)  {
 				listener.onResponse(call,response);
+				response.body().close();
+				response.close();
 			}
 		});
 	}
@@ -185,6 +195,8 @@ public class HttpRequestHelper {
 			@Override
 			public void onResponse(Call call, Response response)  {
 				listener.onResponse(call, response);
+				response.body().close();
+				response.close();
 
 			}
 		});
@@ -235,6 +247,8 @@ public class HttpRequestHelper {
 			@Override
 			public void onResponse(Call call, Response response)  {
 				listener.onResponse(call, response);
+				response.body().close();
+				response.close();
 			}
 		});
 	}
@@ -262,6 +276,8 @@ public class HttpRequestHelper {
 			@Override
 			public void onResponse(Call call, Response response) throws IOException {
 				listener.onResponse(call, response);
+				response.body().close();
+				response.close();
 			}
 		});
 	}
@@ -297,6 +313,8 @@ public class HttpRequestHelper {
 					ObjectMapper om = new ObjectMapper();
 					AccesTokenRequest.accesTokenRequest = om.readValue(resp, AccesTokenRequest.class);
 					AccesTokenRequest.requested_at = new Date();
+					response.body().close();
+					response.close();
 				} else {
 					//TODO
 				}

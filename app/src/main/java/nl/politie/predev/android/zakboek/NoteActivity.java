@@ -435,7 +435,7 @@ public class NoteActivity extends AppCompatActivity {
 				public void onSpeechRecognized(String text, boolean isFinal, boolean fromUpload) {
 
 					final String preparedText = SpeechResultCleaner.cleanResult(text);
-					if (isFinal) {
+					if (isFinal && !preparedText.trim().equalsIgnoreCase("")) {
 
 						runOnUiThread(new Runnable() {
 							@Override
@@ -447,6 +447,7 @@ public class NoteActivity extends AppCompatActivity {
 								} else {
 									plottedText = existingText + " " + preparedText + " ";
 								}
+
 								textView.setText(plottedText);
 								nonFinalText.setText("");
 							}

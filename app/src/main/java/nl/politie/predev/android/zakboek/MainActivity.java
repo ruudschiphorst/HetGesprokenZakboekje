@@ -455,6 +455,7 @@ public class MainActivity extends AppCompatActivity {
 
 			scheduler.scheduleAtFixedRate(new Runnable() {
 				public void run() {
+					Log.e("test", "Setting token...");
 					httpRequestHelper.setToken();
 				}
 			}, 0, 10, TimeUnit.MINUTES);
